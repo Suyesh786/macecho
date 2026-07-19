@@ -28,4 +28,10 @@ dependencies {
 
     // ConstraintLayout — flexible screen layouts
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+
+    // OkHttp — WebSocket transport client (Phase 7)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Kotlin Coroutines — SharedFlow, Dispatchers (Phase 7)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 }

@@ -1,18 +1,19 @@
 /**
- * server.ts — Phase 3
+ * server.ts — Phase 3 / Phase 7 (transport registration added)
  *
  * Thin orchestrator. Responsibilities in this file:
  *   1. Import config from config/
  *   2. Import logger options from logging/
  *   3. Create the Fastify instance
  *   4. Register routes (health-check only in Phase 3)
- *   5. Start the server
- *   6. Handle startup errors and graceful shutdown signals
+ *   5. Register WebSocket transport (Phase 7)
+ *   6. Start the server
+ *   7. Handle startup errors and graceful shutdown signals
  *
  * What does NOT belong here:
  *   • Configuration logic  → config/index.ts
  *   • Logging setup        → logging/index.ts
- *   • WebSocket transport  → Phase 7 (transport/)
+ *   • WebSocket transport  → transport/websocket.ts (registered below, one line)
  *   • Authentication       → Phase 13
  *   • Relay logic          → Phase 14
  *   • Cryptography         → Phase 8
@@ -22,6 +23,7 @@
 import Fastify from "fastify";
 import { config } from "./config/index.js";
 import { buildLoggerOptions } from "./logging/index.js";
+import { registerTransport } from "./transport/websocket.js";
 
 // ---------------------------------------------------------------------------
 // Create Fastify instance
@@ -40,6 +42,13 @@ const app = Fastify({
 app.get("/health", async (_request, _reply) => {
   return { status: "ok", service: "macecho-backend" };
 });
+
+// ---------------------------------------------------------------------------
+// Transport — Phase 7
+// Registers the WebSocket endpoint. All transport logic lives in transport/.
+// ---------------------------------------------------------------------------
+
+await registerTransport(app);
 
 // ---------------------------------------------------------------------------
 // Start
