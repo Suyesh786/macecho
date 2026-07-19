@@ -34,4 +34,7 @@ dependencies {
 
     // Kotlin Coroutines — SharedFlow, Dispatchers (Phase 7)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // JUnit 4 — local JVM unit tests for crypto primitives (Phase 8)
+    testImplementation("junit:junit:4.13.2")
 }
