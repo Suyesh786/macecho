@@ -1,0 +1,59 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* AppDelegate.swift */; };
+		A10000000000000000000002 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* main.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A10000000000000000000011 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A10000000000000000000012 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		A10000000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000014 /* MacEcho.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacEcho.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		A10000000000000000000020 = {isa = PBXGroup; children = (A10000000000000000000021 /* MacEcho */, A10000000000000000000022 /* Products */); sourceTree = "<group>"; };
+		A10000000000000000000021 /* MacEcho */ = {isa = PBXGroup; children = (A10000000000000000000011 /* AppDelegate.swift */, A10000000000000000000012 /* main.swift */, A10000000000000000000013 /* Info.plist */); path = MacEcho; sourceTree = "<group>"; };
+		A10000000000000000000022 /* Products */ = {isa = PBXGroup; children = (A10000000000000000000014 /* MacEcho.app */); name = Products; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000030 /* MacEcho */ = {isa = PBXNativeTarget; buildConfigurationList = A10000000000000000000031 /* Build configuration list for PBXNativeTarget \"MacEcho\" */; buildPhases = (A10000000000000000000032 /* Sources */, A10000000000000000000033 /* Frameworks */, A10000000000000000000034 /* Resources */); buildRules = (); dependencies = (); name = MacEcho; productName = MacEcho; productReference = A10000000000000000000014 /* MacEcho.app */; productType = "com.apple.product-type.application"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000040 /* Project object */ = {isa = PBXProject; attributes = { LastUpgradeCheck = 2600; TargetAttributes = { A10000000000000000000030 = { CreatedOnToolsVersion = 26.0; }; }; }; buildConfigurationList = A10000000000000000000041 /* Build configuration list for PBXProject \"MacEcho\" */; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = A10000000000000000000020; productRefGroup = A10000000000000000000022 /* Products */; projectDirPath = ""; projectRoot = ""; targets = (A10000000000000000000030 /* MacEcho */); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000034 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000032 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* AppDelegate.swift in Sources */, A10000000000000000000002 /* main.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000033 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A10000000000000000000050 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; }; name = Debug; };
+		A10000000000000000000051 /* Release */ = {isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; }; name = Release; };
+		A10000000000000000000052 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = MacEcho/Info.plist; MACOSX_DEPLOYMENT_TARGET = 13.0; PRODUCT_BUNDLE_IDENTIFIER = com.macecho.app; PRODUCT_NAME = MacEcho; SWIFT_VERSION = 6.0; }; name = Debug; };
+		A10000000000000000000053 /* Release */ = {isa = XCBuildConfiguration; buildSettings = { CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = MacEcho/Info.plist; MACOSX_DEPLOYMENT_TARGET = 13.0; PRODUCT_BUNDLE_IDENTIFIER = com.macecho.app; PRODUCT_NAME = MacEcho; SWIFT_VERSION = 6.0; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000000000000000000031 /* Build configuration list for PBXNativeTarget \"MacEcho\" */ = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000052 /* Debug */, A10000000000000000000053 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A10000000000000000000041 /* Build configuration list for PBXProject \"MacEcho\" */ = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000050 /* Debug */, A10000000000000000000051 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000000000000000000040 /* Project object */;
+}
