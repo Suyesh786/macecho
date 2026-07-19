@@ -1,3 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.MacEcho" parent="android:style/Theme.Material.Light.NoActionBar" />
+    <!--
+        Material Components theme — required by the Material dependency added in Phase 4.
+        NoActionBar variant is used because MainActivity manages its own toolbar-free layout.
+    -->
+    <style name="Theme.MacEcho" parent="Theme.MaterialComponents.Light.NoActionBar" />
 </resources>
