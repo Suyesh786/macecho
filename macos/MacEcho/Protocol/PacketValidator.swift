@@ -1,34 +1,33 @@
 
-// PacketValidator.swift — Phase 10
+// PacketValidator.swift — Phase 11 (updated from Phase 10)
 //
 // Implements the packet validation pipeline defined in
 // 07_PROTOCOL_SPECIFICATION.md §Packet Validation Pipeline:
 //
-//   1. Validate protocol version.
-//   2. Validate packet structure.
-//   3. Validate sender identity.
-//   4. Validate authentication state.        [DEFERRED — later phase]
-//   5. Verify packet signature.               [DEFERRED — later phase]
-//   6. Verify packet integrity.               [DEFERRED — later phase]
-//   7. Validate packet freshness.             [DEFERRED — later phase]
-//   8. Detect duplicate packet.               [DEFERRED — later phase]
-//   9. Decrypt payload.                       [DEFERRED — later phase]
-//   10. Execute command.                      [DEFERRED — later phase]
+//   1. Validate protocol version.               [IMPLEMENTED — Phase 10]
+//   2. Validate packet structure.               [IMPLEMENTED — Phase 10]
+//   3. Validate sender identity.                [IMPLEMENTED — Phase 10]
+//   4. Validate authentication state.           [DEFERRED — later phase]
+//   5. Verify packet signature.                 [DEFERRED — later phase]
+//   6. Verify packet integrity.                 [DEFERRED — later phase]
+//   7. Validate packet freshness.               [IMPLEMENTED — Phase 11]
+//   8. Detect duplicate packet.                 [IMPLEMENTED — Phase 11]
+//   9. Decrypt payload.                         [DEFERRED — later phase]
+//   10. Execute command.                        [DEFERRED — later phase]
 //
 // "No implementation may change this processing order" (§Packet Validation
 // Pipeline). All ten stages are represented, in this exact order, in
-// `PacketValidator.validate(_:)`. Stages 1–3 are fully implemented per this
-// phase's scope (serialization / deserialization / structural validation).
-// Stages 4–10 are explicit placeholder hooks: each returns `.deferred` and
-// performs no security-relevant check. A `.deferred` result must NEVER be
-// treated as a passed check by calling code — see the doc comment on
-// `PacketValidationStageResult` below.
+// `PacketValidator.validate(_:)`. Stages 4–6, 9–10 remain `.deferred`.
+//
+// Phase 11 additions:
+//   Stage 7 — Freshness validation is performed by ReplayGuard.
+//   Stage 8 — Duplicate detection is performed by ReplayGuard (UUID) and
+//             SequenceTracker (stale sequence number).
 //
 // Must NOT contain:
 //   - Authentication logic       → later phase (stage 4 is a stub here)
 //   - Signature verification     → later phase (stage 5 is a stub here)
-//   - Replay / freshness logic   → later phase (stage 7 is a stub here)
-//   - Duplicate / sequence logic → later phase (stage 8 is a stub here)
+//   - Integrity verification     → later phase (stage 6 is a stub here)
 //   - Decryption                 → later phase (stage 9 is a stub here)
 //   - Command execution          → later phase (stage 10 is a stub here)
 //   - Business logic of any kind
@@ -73,6 +72,12 @@ enum PacketValidationFailureReason: Equatable {
     case malformedStructure(String)
     case missingRequiredField(String)
     case unknownSenderIdentity
+    /// Stage 7: packet timestamp is outside the configured clock-skew window.
+    case staleTimestamp(packetTimestampMs: Int64, nowMs: Int64, skewMs: Int64)
+    /// Stage 8: Packet UUID has already been processed (replay/duplicate).
+    case duplicatePacketId(String)
+    /// Stage 8: Sequence number is below the staleness threshold.
+    case staleSequenceNumber(sequenceNumber: Int64, nextExpected: Int64)
 }
 
 /// Identifies each of the ten documented pipeline stages, in order.
@@ -90,26 +95,26 @@ enum PacketValidationStage: Int, CaseIterable {
 }
 
 /// Full pipeline outcome: every stage's result, in documented order, plus
-/// a convenience `isFullyValidatedByThisPhase` flag.
+/// a convenience `passedImplementedStages` flag.
 struct PacketValidationReport {
     let results: [PacketValidationStage: PacketValidationStageResult]
 
-    /// `true` only if every implemented stage (1–3) passed. This does NOT
-    /// mean the packet is safe to decrypt or execute — stages 4–10 are
-    /// deferred to later phases and must be run by them before any
-    /// application logic touches this packet (§Payload Processing).
+    /// `true` only if every non-deferred stage passed. A packet where any
+    /// stage is `.deferred` is NOT safe to decrypt or execute — the deferred
+    /// stages must be enforced before any application logic touches this
+    /// packet (§Payload Processing).
     var passedImplementedStages: Bool {
-        [PacketValidationStage.protocolVersion, .packetStructure, .senderIdentity]
+        PacketValidationStage.allCases
+            .filter { if case .deferred = results[$0]! { return false }; return true }
             .allSatisfy { results[$0] == .passed }
     }
 
-    /// The first failure encountered among the implemented (non-deferred)
-    /// stages, if any.
+    /// The first failure encountered among the non-deferred stages, if any.
     var firstFailure: PacketValidationFailureReason? {
-        for stage in [PacketValidationStage.protocolVersion, .packetStructure, .senderIdentity] {
-            if case .failed(let reason) = results[stage] {
-                return reason
-            }
+        for stage in PacketValidationStage.allCases {
+            guard let result = results[stage] else { continue }
+            if case .deferred = result { continue }
+            if case .failed(let reason) = result { return reason }
         }
         return nil
     }
@@ -128,19 +133,35 @@ struct PacketValidationReport {
 enum PacketValidator {
 
     /// Runs all ten pipeline stages in documented order and returns a full
-    /// report. Stages 4–10 always return `.deferred` in this phase.
-    static func validate(_ packet: Packet, knownSenderIds: Set<String>) -> PacketValidationReport {
+    /// report.
+    ///
+    /// Stages 1–3: always evaluated (Protocol Version, Structure, Sender Identity).
+    /// Stage  7:   evaluated when `replayGuard` is supplied (Freshness Validation).
+    /// Stage  8:   evaluated when `replayGuard` and `sequenceTracker` are both
+    ///             supplied (Duplicate Detection).
+    /// Stages 4–6, 9–10: always `.deferred` (implemented in later phases).
+    ///
+    /// - Parameter knownSenderIds: Identifiers the caller currently recognizes.
+    ///   Per §Sender Identity: "Unknown sender identities are rejected
+    ///   immediately." Checks set membership only — NOT authentication/trust.
+    /// - Parameter replayGuard: Optional `ReplayGuard` for Stage 7 freshness
+    ///   and UUID duplicate detection. When `nil`, stages 7 and 8 (UUID half)
+    ///   remain `.deferred`.
+    /// - Parameter sequenceTracker: Optional `SequenceTracker` for Stage 8
+    ///   stale-sequence-number detection. Must not be supplied without
+    ///   `replayGuard`.
+    static func validate(
+        _ packet: Packet,
+        knownSenderIds: Set<String>,
+        replayGuard: ReplayGuard? = nil,
+        sequenceTracker: SequenceTracker? = nil
+    ) -> PacketValidationReport {
         var results: [PacketValidationStage: PacketValidationStageResult] = [:]
 
         // Stage 1 — Validate protocol version.
         results[.protocolVersion] = validateProtocolVersion(packet.header.protocolVersion)
 
         // Stage 2 — Validate packet structure.
-        // By the time a `Packet` value exists, JSON structural decoding
-        // (required fields, JSON correctness) has already succeeded via
-        // PacketSerializer.deserialize(_:) / Codable. This stage re-affirms
-        // that outcome and checks the remaining structural invariants that
-        // Codable's type system cannot express (e.g. non-empty identifiers).
         results[.packetStructure] = validatePacketStructure(packet)
 
         // Stage 3 — Validate sender identity.
@@ -159,32 +180,102 @@ enum PacketValidator {
             reason: "Signature verification requires trust/key material from later phases and is not implemented here."
         )
 
-        // Stage 6 — Verify packet integrity.                [DEFERRED]
+        // Stage 6 — Verify packet integrity.               [DEFERRED]
         results[.integrityVerification] = .deferred(
             reason: "Integrity verification is part of the cryptographic pipeline and is not implemented here."
         )
 
-        // Stage 7 — Validate packet freshness.              [DEFERRED]
-        results[.freshnessValidation] = .deferred(
-            reason: "Freshness / clock-skew / replay validation is not implemented here."
-        )
+        // Stage 7 — Validate packet freshness.             [IMPLEMENTED when replayGuard != nil]
+        if let guard7 = replayGuard {
+            results[.freshnessValidation] = validateFreshness(packet, replayGuard: guard7)
+        } else {
+            results[.freshnessValidation] = .deferred(
+                reason: "Freshness validation requires a ReplayGuard instance (Phase 11)."
+            )
+        }
 
-        // Stage 8 — Detect duplicate packet.                [DEFERRED]
-        results[.duplicateDetection] = .deferred(
-            reason: "Duplicate detection requires a processed-packet-ID cache maintained by a later phase and is not implemented here."
-        )
+        // Stage 8 — Detect duplicate packet.              [IMPLEMENTED when guards supplied]
+        // Only evaluated when Stage 7 passed; if Stage 7 failed we skip Stage 8
+        // to avoid polluting the UUID cache with a rejected packet.
+        let stage7Result = results[.freshnessValidation]!
+        if let guard8 = replayGuard {
+            if case .failed = stage7Result {
+                results[.duplicateDetection] = .deferred(
+                    reason: "Stage 7 failed; Stage 8 skipped to avoid polluting the UUID cache."
+                )
+            } else {
+                results[.duplicateDetection] = validateDuplicate(
+                    packet,
+                    replayGuard: guard8,
+                    sequenceTracker: sequenceTracker
+                )
+            }
+        } else {
+            results[.duplicateDetection] = .deferred(
+                reason: "Duplicate detection requires a ReplayGuard instance (Phase 11)."
+            )
+        }
 
-        // Stage 9 — Decrypt payload.                        [DEFERRED]
+        // Stage 9 — Decrypt payload.                       [DEFERRED]
         results[.payloadDecryption] = .deferred(
-            reason: "Payload decryption is out of scope for Phase 10; the backend must never decrypt payloads and native clients decrypt only after all preceding stages are genuinely enforced."
+            reason: "Payload decryption requires authenticated trust material and is not implemented here."
         )
 
-        // Stage 10 — Execute command.                       [DEFERRED]
+        // Stage 10 — Execute command.                      [DEFERRED]
         results[.commandExecution] = .deferred(
             reason: "Command execution is business logic and is not implemented here."
         )
 
         return PacketValidationReport(results: results)
+    }
+
+    // -----------------------------------------------------------------------
+    // Stage 7 — Freshness validation
+    // -----------------------------------------------------------------------
+
+    private static func validateFreshness(
+        _ packet: Packet,
+        replayGuard: ReplayGuard
+    ) -> PacketValidationStageResult {
+        switch replayGuard.checkFreshnessOnly(packet) {
+        case .fresh:
+            return .passed
+        case .staleTimestamp(let ts, let now, let skew):
+            return .failed(.staleTimestamp(packetTimestampMs: ts, nowMs: now, skewMs: skew))
+        case .duplicatePacketId:
+            // checkFreshnessOnly never returns this case
+            return .passed
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Stage 8 — Duplicate detection
+    // -----------------------------------------------------------------------
+
+    private static func validateDuplicate(
+        _ packet: Packet,
+        replayGuard: ReplayGuard,
+        sequenceTracker: SequenceTracker?
+    ) -> PacketValidationStageResult {
+        // UUID-based duplicate check via ReplayGuard.
+        switch replayGuard.checkDuplicateOnly(packet) {
+        case .duplicatePacketId(let id):
+            return .failed(.duplicatePacketId(id))
+        default:
+            break
+        }
+
+        // Sequence-number staleness check via SequenceTracker.
+        if let tracker = sequenceTracker {
+            switch tracker.checkStaleness(packet) {
+            case .stale(let seq, let expected):
+                return .failed(.staleSequenceNumber(sequenceNumber: seq, nextExpected: expected))
+            default:
+                break
+            }
+        }
+
+        return .passed
     }
 
     // -----------------------------------------------------------------------

@@ -133,7 +133,7 @@ object PacketSerializer {
             ?: throw PacketSerializationException.DecodingFailed("Missing required field 'header'")
         val metadataObj = root.optJSONObject("metadata")
             ?: throw PacketSerializationException.DecodingFailed("Missing required field 'metadata'")
-        val payloadB64 = root.optString("encryptedPayload", null)
+        val payloadB64 = if (root.has("encryptedPayload")) root.getString("encryptedPayload") else null
             ?: throw PacketSerializationException.DecodingFailed("Missing required field 'encryptedPayload'")
 
         try {

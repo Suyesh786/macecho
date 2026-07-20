@@ -17,6 +17,8 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+
 }
 
 dependencies {
@@ -37,4 +39,11 @@ dependencies {
 
     // JUnit 4 — local JVM unit tests for crypto primitives (Phase 8)
     testImplementation("junit:junit:4.13.2")
+
+    // org.json standalone — supplies real JSONObject implementation for local
+    // JVM unit tests. The Android SDK's org.json is a stub in test scope
+    // (throws RuntimeException: "Method not mocked"). This pure-JVM artifact
+    // provides the identical API with a real implementation so serialization
+    // tests can run without instrumentation.
+    testImplementation("org.json:json:20240303")
 }
