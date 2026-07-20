@@ -7,11 +7,12 @@
     "node": ">=24.13.0"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.build.json",
     "start": "node dist/server.js",
     "lint": "eslint .",
     "format": "prettier --check .",
-    "format:write": "prettier --write ."
+    "format:write": "prettier --write .",
+    "test": "jest"
   },
   "dependencies": {
     "@fastify/websocket": "^11.3.0",
@@ -19,11 +20,14 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "26.1.1",
     "@types/ws": "^8.18.1",
     "eslint": "10.7.0",
     "eslint-config-prettier": "10.1.8",
+    "jest": "^30.4.2",
     "prettier": "3.9.5",
+    "ts-jest": "^29.4.11",
     "typescript": "6.0.3",
     "typescript-eslint": "8.64.0"
   }

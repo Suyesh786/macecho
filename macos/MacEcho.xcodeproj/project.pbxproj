@@ -13,6 +13,8 @@
 		A10000000000000000000005 /* Packets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* Packets.swift */; };
 		A10000000000000000000006 /* WebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000018 /* WebSocketClient.swift */; };
 		A10000000000000000000007 /* CryptoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000019 /* CryptoManager.swift */; };
+		A10000000000000000000008 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001B /* KeychainManager.swift */; };
+		A10000000000000000000009 /* TrustStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001C /* TrustStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,15 +28,19 @@
 		A10000000000000000000018 /* WebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketClient.swift; sourceTree = "<group>"; };
 		A10000000000000000000019 /* CryptoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoManager.swift; sourceTree = "<group>"; };
 		A1000000000000000000001A /* CryptoManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoManagerTests.swift; sourceTree = "<group>"; };
+		A1000000000000000000001B /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		A1000000000000000000001C /* TrustStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustStore.swift; sourceTree = "<group>"; };
+		A1000000000000000000001D /* StorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		A10000000000000000000020 = {isa = PBXGroup; children = (A10000000000000000000021 /* MacEcho */, A10000000000000000000022 /* Products */); sourceTree = "<group>"; };
-		A10000000000000000000021 /* MacEcho */ = {isa = PBXGroup; children = (A10000000000000000000011 /* AppDelegate.swift */, A10000000000000000000012 /* main.swift */, A10000000000000000000015 /* StatusItemController.swift */, A10000000000000000000016 /* PopoverViewController.swift */, A10000000000000000000023 /* Protocol */, A10000000000000000000024 /* Transport */, A10000000000000000000025 /* Crypto */, A10000000000000000000013 /* Info.plist */); path = MacEcho; sourceTree = "<group>"; };
+		A10000000000000000000021 /* MacEcho */ = {isa = PBXGroup; children = (A10000000000000000000011 /* AppDelegate.swift */, A10000000000000000000012 /* main.swift */, A10000000000000000000015 /* StatusItemController.swift */, A10000000000000000000016 /* PopoverViewController.swift */, A10000000000000000000023 /* Protocol */, A10000000000000000000024 /* Transport */, A10000000000000000000025 /* Crypto */, A10000000000000000000026 /* Storage */, A10000000000000000000013 /* Info.plist */); path = MacEcho; sourceTree = "<group>"; };
 		A10000000000000000000022 /* Products */ = {isa = PBXGroup; children = (A10000000000000000000014 /* MacEcho.app */); name = Products; sourceTree = "<group>"; };
 		A10000000000000000000023 /* Protocol */ = {isa = PBXGroup; children = (A10000000000000000000017 /* Packets.swift */); path = Protocol; sourceTree = "<group>"; };
 		A10000000000000000000024 /* Transport */ = {isa = PBXGroup; children = (A10000000000000000000018 /* WebSocketClient.swift */); path = Transport; sourceTree = "<group>"; };
 		A10000000000000000000025 /* Crypto */ = {isa = PBXGroup; children = (A10000000000000000000019 /* CryptoManager.swift */, A1000000000000000000001A /* CryptoManagerTests.swift */); path = Crypto; sourceTree = "<group>"; };
+		A10000000000000000000026 /* Storage */ = {isa = PBXGroup; children = (A1000000000000000000001B /* KeychainManager.swift */, A1000000000000000000001C /* TrustStore.swift */, A1000000000000000000001D /* StorageTests.swift */); path = Storage; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -50,7 +56,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A10000000000000000000032 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* AppDelegate.swift in Sources */, A10000000000000000000002 /* main.swift in Sources */, A10000000000000000000003 /* StatusItemController.swift in Sources */, A10000000000000000000004 /* PopoverViewController.swift in Sources */, A10000000000000000000005 /* Packets.swift in Sources */, A10000000000000000000006 /* WebSocketClient.swift in Sources */, A10000000000000000000007 /* CryptoManager.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
+		A10000000000000000000032 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* AppDelegate.swift in Sources */, A10000000000000000000002 /* main.swift in Sources */, A10000000000000000000003 /* StatusItemController.swift in Sources */, A10000000000000000000004 /* PopoverViewController.swift in Sources */, A10000000000000000000005 /* Packets.swift in Sources */, A10000000000000000000006 /* WebSocketClient.swift in Sources */, A10000000000000000000007 /* CryptoManager.swift in Sources */, A10000000000000000000008 /* KeychainManager.swift in Sources */, A10000000000000000000009 /* TrustStore.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
