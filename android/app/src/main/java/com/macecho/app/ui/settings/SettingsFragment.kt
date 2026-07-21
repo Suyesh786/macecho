@@ -6,51 +6,28 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.macecho.app.databinding.FragmentSettingsBinding
-import com.macecho.app.navigation.NavigationHost
 
 /**
- * SettingsFragment — Phase 4
+ * SettingsFragment — Phase 12.1 UI Redesign
  *
- * PRESENTATIONAL ONLY. This fragment renders the Settings screen scaffold as
- * described in 06_UI_GUIDELINES.md §Android Settings.
+ * App Settings screen with three cards:
+ *   Permissions  — Local Network, Camera, Notifications (visual switches)
+ *   Privacy      — Data Collection, Analytics (visual switches, off)
+ *   About        — App Version
  *
- * Permitted responsibilities:
- *   - Render static UI
- *   - Handle the Back button click
- *   - Request navigation through [NavigationHost]
+ * All switches are visual-only in this phase.
+ * Real permission request logic → Phase 16.
  *
  * Must NOT contain:
- *   - Networking or WebSocket logic   → Phase 7
- *   - Cryptography                    → Phase 8
- *   - Permission handling             → Phase 16
- *   - Persistence or storage          → future phases
- *   - Protocol or pairing logic       → Phase 12 / Phase 13
- *   - Background services             → Phase 16
+ *   - Permission request APIs  → Phase 16
+ *   - Persistence              → future phases
  *   - Business logic of any kind
- *   - Application state management
- *
- * Settings Sections in Phase 4 (all static, all inert):
- *   - Permissions   → future Phase 16
- *   - Connection    → future Phase 7 / Phase 14
- *   - Notifications → future Phase 16 / Phase 17
- *   - About         → content TBD in a future phase
- *   - Privacy       → content TBD in a future phase
- *
- * Tapping any section header performs NO action in Phase 4.
- * Their purpose is to establish the future screen structure only.
- *
- * Navigation:
- *   This fragment never touches FragmentManager directly.
- *   It requests back navigation by calling through [NavigationHost],
- *   which is implemented by MainActivity.
  */
 class SettingsFragment : Fragment() {
 
-    // ViewBinding reference. Initialized in onCreateView, cleared in onDestroyView
-    // to prevent view leaks (guardrail 6).
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = checkNotNull(_binding) {
-        "ViewBinding accessed outside of valid lifecycle (onCreateView..onDestroyView)"
+        "ViewBinding accessed outside of valid lifecycle"
     }
 
     override fun onCreateView(
@@ -64,24 +41,12 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupClickListeners()
-    }
-
-    private fun setupClickListeners() {
-        // Navigate back via the NavigationHost interface.
-        // This fragment never manipulates FragmentManager directly.
-        binding.btnBack.setOnClickListener {
-            (requireActivity() as NavigationHost).navigateBack()
-        }
-
-        // Section items are static informational placeholders in Phase 4.
-        // No click listeners are attached to section headers or descriptions.
-        // Their only purpose is to establish the future screen structure.
+        // All switches are non-clickable UI placeholders.
+        // No listeners attached — Phase 16 will wire real permission requests.
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Clear binding reference to prevent memory leaks (guardrail 6).
         _binding = null
     }
 }

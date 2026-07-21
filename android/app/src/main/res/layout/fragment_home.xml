@@ -1,115 +1,253 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    fragment_home.xml — Phase 4
-    Home Screen layout per 06_UI_GUIDELINES.md §Android Home Screen.
-    All values are static placeholders. No live data is bound in Phase 4.
-    View IDs are stable and descriptive to minimise future refactoring.
+    fragment_home.xml — Phase 12.1 UI Redesign
+    Matches the Home screen mockup:
+      Header (MacEcho + greeting + status dot)
+      Pair New Device card
+      Connection Overview card
+      Need Help? section
 -->
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="?android:attr/colorBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="32dp">
 
-        <!-- App title -->
+        <!-- ── Header ─────────────────────────────────────────────── -->
         <TextView
-            android:id="@+id/tvAppTitle"
+            android:id="@+id/tv_app_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            android:text="@string/home_title"
-            android:textAppearance="?attr/textAppearanceHeadline5"
-            tools:ignore="UnusedAttribute" />
-
-        <!-- Pairing Status -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/home_status_label"
-            android:textAppearance="?attr/textAppearanceOverline" />
+            android:text="@string/app_name"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="26sp"
+            android:fontFamily="sans-serif-medium"
+            tools:text="MacEcho"/>
 
         <TextView
-            android:id="@+id/tvPairingStatus"
+            android:id="@+id/tv_greeting"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/home_status_placeholder"
-            android:textAppearance="?attr/textAppearanceBody1" />
+            android:layout_marginTop="2dp"
+            android:text="@string/home_greeting_afternoon"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="26sp"
+            android:fontFamily="sans-serif-medium"
+            tools:text="Good Afternoon"/>
 
-        <!-- Connected Mac -->
+        <!-- Status pill -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/iv_status_dot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_status_dot"
+                android:contentDescription="@string/cd_status_indicator"/>
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="@string/home_status_ready"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp"
+                tools:text="Ready to Pair"/>
+        </LinearLayout>
+
+        <!-- ── Pair New Device Card ────────────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_pair_device"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/card_surface"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="18dp">
+
+                <!-- QR icon in a rounded badge -->
+                <FrameLayout
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_icon_badge_blue">
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_qr_code"
+                        android:contentDescription="@string/cd_qr_icon"/>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_pair_card_title"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/home_pair_card_subtitle"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="13sp"/>
+                </LinearLayout>
+
+                <!-- Chevron -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textSize="22sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginStart="8dp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── Connection Overview Card ───────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/card_surface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_connection_overview_title"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="15sp"
+                    android:fontFamily="sans-serif-medium"/>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:background="?attr/colorOutlineVariant"/>
+
+                <!-- Status row -->
+                <LinearLayout style="@style/RowStyle">
+                    <TextView style="@style/RowLabelStyle" android:text="@string/home_row_status"/>
+                    <TextView style="@style/RowValueStyle" android:text="@string/home_row_status_value"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorOutlineVariant"/>
+
+                <!-- Trusted Macs row -->
+                <LinearLayout style="@style/RowStyle">
+                    <TextView style="@style/RowLabelStyle" android:text="@string/home_row_trusted_macs"/>
+                    <TextView style="@style/RowValueStyle" android:text="@string/home_row_trusted_macs_value"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorOutlineVariant"/>
+
+                <!-- Protocol row -->
+                <LinearLayout style="@style/RowStyle">
+                    <TextView style="@style/RowLabelStyle" android:text="@string/home_row_protocol"/>
+                    <TextView style="@style/RowValueStyle" android:text="@string/home_row_protocol_value"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorOutlineVariant"/>
+
+                <!-- Security row -->
+                <LinearLayout style="@style/RowStyle">
+                    <TextView style="@style/RowLabelStyle" android:text="@string/home_row_security"/>
+                    <TextView style="@style/RowValueStyle" android:text="@string/home_row_security_value"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── Need Help? ──────────────────────────────────────────── -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/home_connected_device_label"
-            android:textAppearance="?attr/textAppearanceOverline" />
+            android:layout_marginTop="28dp"
+            android:text="@string/home_help_title"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif-medium"/>
 
         <TextView
-            android:id="@+id/tvConnectedMac"
+            android:id="@+id/tv_link_how_pairing"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/home_connected_device_placeholder"
-            android:textAppearance="?attr/textAppearanceBody1" />
-
-        <!-- Connection Health -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/home_connection_health_label"
-            android:textAppearance="?attr/textAppearanceOverline" />
+            android:layout_marginTop="10dp"
+            android:text="@string/home_link_how_pairing"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="@color/link_blue"
+            android:textSize="14sp"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <TextView
-            android:id="@+id/tvConnectionHealth"
+            android:id="@+id/tv_link_troubleshooting"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/home_connection_health_placeholder"
-            android:textAppearance="?attr/textAppearanceBody1" />
-
-        <!-- Permission Status -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/home_permissions_label"
-            android:textAppearance="?attr/textAppearanceOverline" />
-
-        <TextView
-            android:id="@+id/tvPermissionStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/home_permissions_placeholder"
-            android:textAppearance="?attr/textAppearanceBody1" />
-
-        <!-- Last Sync (optional per UI guidelines) -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/home_last_sync_label"
-            android:textAppearance="?attr/textAppearanceOverline" />
-
-        <TextView
-            android:id="@+id/tvLastSync"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            android:text="@string/home_last_sync_placeholder"
-            android:textAppearance="?attr/textAppearanceBody1" />
-
-        <!-- Settings button — navigates to SettingsFragment via MainActivity -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnManageSettings"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/home_settings_button" />
+            android:layout_marginTop="8dp"
+            android:text="@string/home_link_troubleshooting"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="@color/link_blue"
+            android:textSize="14sp"
+            android:clickable="true"
+            android:focusable="true"/>
 
     </LinearLayout>
-
 </ScrollView>

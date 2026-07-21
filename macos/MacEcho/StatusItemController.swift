@@ -40,9 +40,12 @@ final class StatusItemController: NSObject {
 
         // Popover ─ configured before super.init so button target can be set
         popover = NSPopover()
-        popover.contentViewController = PopoverViewController()
+        // Phase 12.1: AppNavigationController replaces the Phase 5 PopoverViewController.
+        // It manages the full page stack (Home → PairDevice / RingPhone / etc.).
+        // Popover size is driven by AppNavigationController.preferredContentSize.
+        popover.contentViewController = AppNavigationController()
         popover.behavior = .transient   // closes automatically when focus leaves
-        popover.animates = false        // UI guidelines: opens instantly, no splash
+        popover.animates = true         // Phase 12.1: smooth popover open/close
 
         super.init()
 

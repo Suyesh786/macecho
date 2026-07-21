@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    qr_scan_frame.xml — Phase 12.2
+    QR targeting frame: four corner brackets drawn with strokes to indicate
+    the active scan area without blocking the camera view.
+    Uses shape drawables only — no SVG, no circle/rect elements (Phase 12.1 lesson).
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Transparent fill — shows camera through -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+        </shape>
+    </item>
+
+    <!-- Top-left corner: horizontal stroke -->
+    <item
+        android:top="0dp"
+        android:left="0dp"
+        android:right="224dp"
+        android:bottom="248dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <size android:width="36dp" android:height="4dp" />
+        </shape>
+    </item>
+
+    <!-- Top-left corner: vertical stroke -->
+    <item
+        android:top="0dp"
+        android:left="0dp"
+        android:right="256dp"
+        android:bottom="220dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <size android:width="4dp" android:height="36dp" />
+        </shape>
+    </item>
+
+    <!-- Top-right corner: horizontal stroke -->
+    <item
+        android:top="0dp"
+        android:left="224dp"
+        android:right="0dp"
+        android:bottom="248dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <size android:width="36dp" android:height="4dp" />
+        </shape>
+    </item>
+
+    <!-- Top-right corner: vertical stroke -->
+    <item
+        android:top="0dp"
+        android:left="256dp"
+        android:right="0dp"
+        android:bottom="220dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <size android:width="4dp" android:height="36dp" />
+        </shape>
+    </item>
+
+    <!-- Bottom-left corner: horizontal stroke -->
+    <item
+        android:top="248dp"
+        android:left="0dp"
+        android:right="224dp"
+        android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <size android:width="36dp" android:height="4dp" />
+        </shape>
+    </item>
+
+    <!-- Bottom-left corner: vertical stroke -->
+    <item
+        android:top="220dp"
+        android:left="0dp"
+        android:right="256dp"
+        android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <size android:width="4dp" android:height="36dp" />
+        </shape>
+    </item>
+
+    <!-- Bottom-right corner: horizontal stroke -->
+    <item
+        android:top="248dp"
+        android:left="224dp"
+        android:right="0dp"
+        android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <size android:width="36dp" android:height="4dp" />
+        </shape>
+    </item>
+
+    <!-- Bottom-right corner: vertical stroke -->
+    <item
+        android:top="220dp"
+        android:left="256dp"
+        android:right="0dp"
+        android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <size android:width="4dp" android:height="36dp" />
+        </shape>
+    </item>
+
+</layer-list>

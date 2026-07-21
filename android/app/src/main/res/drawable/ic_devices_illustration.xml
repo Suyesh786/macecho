@@ -1,0 +1,49 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Laptop outline -->
+    <path
+        android:strokeWidth="3"
+        android:strokeColor="#C3C7CF"
+        android:fillColor="#E8EDF8"
+        android:pathData="M12,20 Q10,20 10,22 L10,68 Q10,70 12,70 L88,70 Q90,70 90,68 L90,22 Q90,20 88,20 Z"/>
+    <path
+        android:fillColor="#D0D8F0"
+        android:pathData="M14,24 L86,24 L86,66 L14,66 Z"/>
+    <!-- Laptop keyboard base -->
+    <path
+        android:strokeWidth="2"
+        android:strokeColor="#B0BAD0"
+        android:fillColor="#DDE3F0"
+        android:pathData="M6,70 Q4,70 4,72 L4,76 Q4,78 6,78 L94,78 Q96,78 96,76 L96,72 Q96,70 94,70 Z"/>
+    <!-- Phone outline -->
+    <path
+        android:strokeWidth="2.5"
+        android:strokeColor="#1A6BF5"
+        android:fillColor="#D8E6FF"
+        android:pathData="M62,35 Q60,35 60,37 L60,80 Q60,82 62,82 L80,82 Q82,82 82,80 L82,37 Q82,35 80,35 Z"/>
+    <!-- Phone screen -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M63,40 L79,40 L79,75 L63,75 Z"/>
+    <!-- Pairing arc -->
+    <path
+        android:strokeWidth="3"
+        android:strokeColor="#1A6BF5"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:pathData="M55,55 Q50,40 45,55"/>
+    <!-- Shield checkmark -->
+    <path
+        android:fillColor="#34C759"
+        android:pathData="M38,42 Q34,42 34,46 L34,58 Q34,65 42,68 Q50,65 50,58 L50,46 Q50,42 46,42 Z"/>
+    <path
+        android:strokeWidth="2.5"
+        android:strokeColor="#FFFFFF"
+        android:fillColor="@android:color/transparent"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M38,55 L41,58 L47,51"/>
+</vector>

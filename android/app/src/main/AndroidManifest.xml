@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--
-        Phase 4: Android foundation shell.
-        No permissions declared — permission requests belong to later phases
-        when the features that require them are implemented.
-    -->
+    <!-- Phase 12.2: Camera — QR code scanning for pairing -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Phase 12.2: Internet — WebSocket connection to pairing backend -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- CameraX feature declaration -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- 
+        DEVELOPMENT-ONLY SETTING
+        This exists solely so Android devices can connect to the local development 
+        backend over ws:// during development.
+        This MUST be removed when the production backend uses HTTPS/WSS. 
+    -->
     <application
         android:name=".MacEchoApplication"
         android:allowBackup="false"
+        android:usesCleartextTraffic="true"
         android:label="@string/app_name"
         android:theme="@style/Theme.MacEcho">
 

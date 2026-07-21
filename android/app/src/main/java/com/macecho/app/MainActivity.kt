@@ -3,93 +3,119 @@ package com.macecho.app
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.macecho.app.navigation.NavigationHost
+import com.macecho.app.ui.devices.TrustedDevicesFragment
 import com.macecho.app.ui.home.HomeFragment
+import com.macecho.app.ui.pair.PairDeviceFragment
+import com.macecho.app.ui.settings.SettingsFragment
 
 /**
- * MainActivity — Phase 4
+ * MainActivity — Phase 12.1 UI Redesign
  *
- * Application entry point. Thin orchestrator responsible for:
- *   1. Hosting the fragment container
- *   2. Loading the initial fragment (HomeFragment) on first launch
- *   3. Implementing [NavigationHost] so fragments can request navigation
- *      without touching FragmentManager directly
- *   4. Delegating system Back button presses to the fragment back stack
+ * Hosts the BottomNavigationView and a fragment container.
+ * Tabs: Home / Devices / Settings — no Notifications tab.
  *
- * What does NOT belong here:
- *   - Networking / WebSocket logic   → Phase 7 (transport/)
- *   - Authentication                 → Phase 13
- *   - Pairing logic                  → Phase 12
- *   - Cryptography                   → Phase 8
- *   - Permission handling            → Phase 16
- *   - Background services            → Phase 16
- *   - Business logic of any kind
+ * Navigation rules:
+ *   Bottom nav swaps the primary tab fragment.
+ *   Fragments that require a detail screen (e.g. PairDeviceFragment)
+ *   call [navigateTo]; back navigation via [navigateBack] pops to the tab.
  *
- * Navigation:
- *   All fragment transactions originate here through the [NavigationHost]
- *   interface. No fragment manipulates FragmentManager directly. This keeps
- *   navigation logic centralized and easy to extend in later phases.
- *
- * Animations:
- *   No fragment transition animations are added in Phase 4. Navigation is
- *   kept simple and functional. UI refinement belongs to a later phase.
+ * Must NOT contain:
+ *   - Pairing logic         → Phase 12.2
+ *   - WebSocket logic       → Phase 7
+ *   - Cryptography          → Phase 8
+ *   - Permission handling   → Phase 16
+ *   - Business logic
  */
 class MainActivity : AppCompatActivity(), NavigationHost {
+
+    private lateinit var bottomNav: BottomNavigationView
+
+    // Tracks which tab is currently selected so we can restore it on back.
+    private var currentTabId: Int = R.id.nav_home
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Load the initial fragment only on first creation.
-        // When the Activity is recreated (e.g., rotation), the fragment manager
-        // restores the existing back stack automatically — no re-load needed.
+        bottomNav = findViewById(R.id.bottom_navigation)
+
+        // Load initial tab only on first creation.
         if (savedInstanceState == null) {
-            navigateTo(HomeFragment())
+            showTab(R.id.nav_home)
+        } else {
+            currentTabId = savedInstanceState.getInt(KEY_TAB, R.id.nav_home)
+        }
+
+        bottomNav.setOnItemSelectedListener { item ->
+            if (item.itemId != currentTabId) {
+                currentTabId = item.itemId
+                showTab(item.itemId)
+            }
+            true
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(KEY_TAB, currentTabId)
+    }
+
     // -------------------------------------------------------------------------
-    // NavigationHost implementation
+    // Tab switching
     // -------------------------------------------------------------------------
 
-    /**
-     * Navigates to [fragment] by replacing the current fragment container
-     * contents and adding the current state to the back stack.
-     *
-     * No transition animations are added in Phase 4 (guardrail 7).
-     */
+    private fun showTab(tabId: Int) {
+        val fragment: Fragment = when (tabId) {
+            R.id.nav_home     -> HomeFragment()
+            R.id.nav_devices  -> TrustedDevicesFragment()
+            R.id.nav_settings -> SettingsFragment()
+            else              -> HomeFragment()
+        }
+        supportFragmentManager
+            .beginTransaction()
+            .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+            .replace(R.id.fragment_container, fragment, tabId.toString())
+            .commit()
+    }
+
+    // -------------------------------------------------------------------------
+    // NavigationHost — detail screens pushed on top of the tab
+    // -------------------------------------------------------------------------
+
     override fun navigateTo(fragment: Fragment) {
         supportFragmentManager
             .beginTransaction()
+            .setCustomAnimations(
+                android.R.anim.slide_in_left,
+                android.R.anim.slide_out_right,
+                android.R.anim.slide_in_left,
+                android.R.anim.slide_out_right
+            )
             .replace(R.id.fragment_container, fragment)
             .addToBackStack(null)
             .commit()
     }
 
-    /**
-     * Pops the fragment back stack if entries exist.
-     * Called by fragments that need to navigate back (e.g., SettingsFragment's
-     * Back button) without manipulating FragmentManager directly.
-     */
     override fun navigateBack() {
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack()
         }
     }
 
-    /**
-     * Handles the system Back button.
-     * If the fragment back stack has entries, pop to the previous screen.
-     * If the back stack is empty, allow the default Activity finish behaviour.
-     */
     @Suppress("MissingSuperCall")
     @Deprecated("Use OnBackPressedDispatcher instead for new code")
     override fun onBackPressed() {
-        if (supportFragmentManager.backStackEntryCount > 1) {
+        if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack()
         } else {
             @Suppress("DEPRECATION")
             super.onBackPressed()
         }
+    }
+
+    companion object {
+        private const val KEY_TAB = "current_tab"
     }
 }

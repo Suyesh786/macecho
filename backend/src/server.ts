@@ -24,6 +24,7 @@ import Fastify from "fastify";
 import { config } from "./config/index.js";
 import { buildLoggerOptions } from "./logging/index.js";
 import { registerTransport } from "./transport/websocket.js";
+import { PairingSessionManager } from "./pairing/PairingSessionManager.js";
 
 // ---------------------------------------------------------------------------
 // Create Fastify instance
@@ -44,11 +45,21 @@ app.get("/health", async (_request, _reply) => {
 });
 
 // ---------------------------------------------------------------------------
-// Transport — Phase 7
+// Pairing Session Manager — Phase 12.2
+// Single shared instance for the process lifetime.
+// ---------------------------------------------------------------------------
+
+const pairingManager = new PairingSessionManager({
+  info: (msg) => app.log.info(msg),
+  warn: (msg) => app.log.warn(msg),
+});
+
+// ---------------------------------------------------------------------------
+// Transport — Phase 7 + Phase 12.2
 // Registers the WebSocket endpoint. All transport logic lives in transport/.
 // ---------------------------------------------------------------------------
 
-await registerTransport(app);
+await registerTransport(app, { pairingManager });
 
 // ---------------------------------------------------------------------------
 // Start
@@ -71,6 +82,7 @@ async function start(): Promise<void> {
 async function shutdown(signal: string): Promise<void> {
   app.log.info({ signal }, "Shutdown signal received — closing server");
   try {
+    pairingManager.shutdown();
     await app.close();
     app.log.info("Server closed successfully");
     process.exit(0);

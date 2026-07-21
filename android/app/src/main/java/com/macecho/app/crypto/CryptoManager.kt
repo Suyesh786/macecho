@@ -130,22 +130,39 @@ object CryptoManager {
      * and allow the reference to go out of scope. Do not cache it.
      *
      * @param privateKey         The local device's X25519 private key.
-     * @param peerPublicKeyBytes The peer's X25519 public key encoded in
-     *                           X.509/SubjectPublicKeyInfo format
-     *                           (i.e., [PublicKey.encoded]).
+     * @param peerPublicKeyBytes The peer's X25519 public key as raw 32 bytes
+     *                           (CryptoKit rawRepresentation) or X.509 encoded.
      * @return The raw 32-byte shared secret.
      */
     fun deriveX25519SharedSecret(
         privateKey: PrivateKey,
         peerPublicKeyBytes: ByteArray,
     ): ByteArray {
+        // CryptoKit sends 32 raw bytes. JCA expects 44-byte X.509 SubjectPublicKeyInfo.
+        val x509Header = byteArrayOf(
+            0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x6e, 0x03, 0x21, 0x00
+        )
+        val x509Bytes = if (peerPublicKeyBytes.size == 32) {
+            x509Header + peerPublicKeyBytes
+        } else {
+            peerPublicKeyBytes
+        }
+
         val keyFactory = KeyFactory.getInstance("X25519")
-        val peerPublicKey: PublicKey = keyFactory.generatePublic(X509EncodedKeySpec(peerPublicKeyBytes))
+        val peerPublicKey: PublicKey = keyFactory.generatePublic(X509EncodedKeySpec(x509Bytes))
         val agreement = KeyAgreement.getInstance("X25519")
         agreement.init(privateKey)
         agreement.doPhase(peerPublicKey, true)
         // generateSecret() returns the raw shared secret; not cached here
         return agreement.generateSecret()
+    }
+
+    /**
+     * Extracts the raw 32-byte public key from an X25519 KeyPair for transmission to CryptoKit.
+     */
+    fun getRawX25519PublicKey(keyPair: KeyPair): ByteArray {
+        val encoded = keyPair.public.encoded
+        return if (encoded.size == 44) encoded.copyOfRange(12, 44) else encoded
     }
 
     // -----------------------------------------------------------------------

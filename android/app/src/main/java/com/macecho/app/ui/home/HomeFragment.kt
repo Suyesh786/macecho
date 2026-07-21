@@ -7,44 +7,32 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.macecho.app.databinding.FragmentHomeBinding
 import com.macecho.app.navigation.NavigationHost
-import com.macecho.app.ui.settings.SettingsFragment
+import com.macecho.app.ui.pair.PairDeviceFragment
+import java.util.Calendar
 
 /**
- * HomeFragment — Phase 4
+ * HomeFragment — Phase 12.1 UI Redesign
  *
- * PRESENTATIONAL ONLY. This fragment is responsible for rendering the Home
- * Screen UI as described in 06_UI_GUIDELINES.md §Android Home Screen.
+ * Presentational screen matching the Phase 12.1 design reference.
  *
- * Permitted responsibilities:
- *   - Render static UI
- *   - Handle simple button clicks
- *   - Request navigation through [NavigationHost]
+ * Layout:
+ *   Header: MacEcho + dynamic greeting + status pill
+ *   Pair New Device card → navigates to PairDeviceFragment
+ *   Connection Overview card (static placeholder values)
+ *   Need Help? links (UI only)
  *
  * Must NOT contain:
- *   - Networking or WebSocket logic   → Phase 7
- *   - Cryptography                    → Phase 8
- *   - Permission handling             → Phase 16
- *   - Persistence or storage          → future phases
- *   - Protocol or pairing logic       → Phase 12 / Phase 13
- *   - Background services             → Phase 16
- *   - Business logic of any kind
- *   - Application state management
- *
- * All status values displayed in Phase 4 are static placeholders.
- * They will be replaced with live data in later phases.
- *
- * Navigation:
- *   This fragment never touches FragmentManager directly.
- *   It requests navigation by calling through [NavigationHost],
- *   which is implemented by MainActivity.
+ *   - QR scanning / generation    → Phase 12.2
+ *   - Pairing logic               → Phase 12.2
+ *   - WebSocket / network calls   → Phase 7
+ *   - Permission handling         → Phase 16
+ *   - Business logic
  */
 class HomeFragment : Fragment() {
 
-    // ViewBinding reference. Initialized in onCreateView, cleared in onDestroyView
-    // to prevent view leaks (guardrail 6).
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = checkNotNull(_binding) {
-        "ViewBinding accessed outside of valid lifecycle (onCreateView..onDestroyView)"
+        "ViewBinding accessed outside of valid lifecycle"
     }
 
     override fun onCreateView(
@@ -58,20 +46,42 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setDynamicGreeting()
         setupClickListeners()
     }
 
-    private fun setupClickListeners() {
-        // Navigate to Settings via the NavigationHost interface.
-        // This fragment never manipulates FragmentManager directly.
-        binding.btnManageSettings.setOnClickListener {
-            (requireActivity() as NavigationHost).navigateTo(SettingsFragment())
+    // -------------------------------------------------------------------------
+    // Dynamic greeting based on time of day
+    // -------------------------------------------------------------------------
+
+    private fun setDynamicGreeting() {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val greeting = when {
+            hour < 12 -> getString(com.macecho.app.R.string.home_greeting_morning)
+            hour < 18 -> getString(com.macecho.app.R.string.home_greeting_afternoon)
+            else      -> getString(com.macecho.app.R.string.home_greeting_evening)
         }
+        binding.tvGreeting.text = greeting
+    }
+
+    // -------------------------------------------------------------------------
+    // Click listeners
+    // -------------------------------------------------------------------------
+
+    private fun setupClickListeners() {
+        // Pair New Device card → navigate to PairDeviceFragment
+        // No pairing logic; navigation only.
+        binding.cardPairDevice.setOnClickListener {
+            (requireActivity() as NavigationHost).navigateTo(PairDeviceFragment())
+        }
+
+        // Help links — UI only, no business logic.
+        binding.tvLinkHowPairing.setOnClickListener { /* Phase 12.2: open help content */ }
+        binding.tvLinkTroubleshooting.setOnClickListener { /* Phase 12.2: open troubleshooting */ }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Clear binding reference to prevent memory leaks (guardrail 6).
         _binding = null
     }
 }

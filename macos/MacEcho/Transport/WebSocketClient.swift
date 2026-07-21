@@ -75,6 +75,9 @@ enum TransportEvent {
     /// Raw bytes received from the remote endpoint.
     /// No parsing is performed. The caller (Phase 10+) interprets the bytes.
     case packetReceived([UInt8])
+    /// Text received from the remote endpoint.
+    /// Used exclusively for Phase 12.2 temporary pairing JSON messages.
+    case textReceived(String)
     /// A transport-level error occurred.
     case error(Error)
 }
@@ -199,6 +202,17 @@ actor WebSocketClient {
         }
     }
 
+    /// Sends a text message to the remote endpoint.
+    /// Used exclusively for Phase 12.2 temporary pairing messages.
+    func sendText(_ text: String) async {
+        guard !isShutdown, state == .connected, let task = webSocketTask else { return }
+        do {
+            try await task.send(.string(text))
+        } catch {
+            // Delivery errors surface through the receive loop
+        }
+    }
+
     // MARK: - Internal connection management
 
     private func openSocket(url: URL) {
@@ -207,6 +221,13 @@ actor WebSocketClient {
         let task = session.webSocketTask(with: url)
         webSocketTask = task
         task.resume()
+        
+        // URLSessionWebSocketTask automatically queues sends until the socket
+        // connects, so we can transition to connected immediately.
+        state = .connected
+        currentReconnectDelay = reconnectInitialDelay
+        eventContinuation.yield(.connected)
+        
         startReceiveLoop()
         startHeartbeat()
         startTimeoutMonitor()
@@ -227,20 +248,15 @@ actor WebSocketClient {
 
         switch result {
         case .success(let message):
-            // First successful receive confirms the connection is live
-            if state == .connecting {
-                state = .connected
-                currentReconnectDelay = reconnectInitialDelay
-                eventContinuation.yield(.connected)
-            }
             resetTimeout()
 
             switch message {
             case .data(let data):
                 // Opaque bytes — no parsing at the transport layer
                 eventContinuation.yield(.packetReceived([UInt8](data)))
-            case .string:
-                break // Binary-only transport; text frames are ignored
+            case .string(let text):
+                // Text — Phase 12.2 pairing messages
+                eventContinuation.yield(.textReceived(text))
             @unknown default:
                 break
             }

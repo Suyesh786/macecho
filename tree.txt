@@ -1,0 +1,207 @@
+.
+ |-macos
+ | |-MacEcho
+ | | |-UI
+ | | | |-RingPhoneViewController.swift
+ | | | |-TrustedDevicesViewController.swift
+ | | | |-HomeViewController.swift
+ | | | |-ActionCardView.swift
+ | | | |-PairDeviceViewController.swift
+ | | | |-AppNavigationController.swift
+ | | | |-PairingState.swift
+ | | | |-PermissionsViewController.swift
+ | | |-Pairing
+ | | | |-PairingSessionToken.swift
+ | | | |-PairingMessageSerialization.swift
+ | | | |-PairingHandshakeController.swift
+ | | | |-QRCodeGenerator.swift
+ | | | |-MacPairingState.swift
+ | | |-Crypto
+ | | | |-CryptoManagerTests.swift
+ | | | |-CryptoManager.swift
+ | | |-Transport
+ | | | |-WebSocketClient.swift
+ | | |-Protocol
+ | | | |-Packets.swift
+ | | | |-SequenceTracker.swift
+ | | | |-ReplayGuard.swift
+ | | | |-SequenceTrackerTests.swift
+ | | | |-PacketValidator.swift
+ | | | |-PacketSerialization.swift
+ | | | |-PacketSerializationTests.swift
+ | | | |-ReplayGuardTests.swift
+ | | |-Storage
+ | | | |-StorageTests.swift
+ | | | |-KeychainManager.swift
+ | | | |-TrustStore.swift
+ | | |-StatusItemController.swift
+ | | |-PopoverViewController.swift
+ | | |-AppDelegate.swift
+ | | |-main.swift
+ | | |-Info.plist
+ | |-MacEcho.xcodeproj
+ | | |-xcuserdata
+ | | | |-xcuserdata
+ | | | |-xcshareddata
+ | | | | |-swiftpm
+ | | | | | |-configuration
+ | |-add_files.rb
+ | |-build
+ |-backend
+ | |-dist
+ | | |-pairing
+ | | | |-PairingSessionManager.js
+ | | |-transport
+ | | | |-websocket.js
+ | | |-config
+ | | | |-index.js
+ | | |-server.js
+ | | |-protocol
+ | | | |-packetSerialization.js
+ | | | |-pairingPackets.js
+ | | | |-packetvalidation.js
+ | | | |-packets.js
+ | | | |-packetSerializationtest.js
+ | | |-logging
+ | | | |-index.js
+ | |-jest.config.js
+ | |-node_modules
+ | |-tsconfig.test.json
+ | |-package-lock.json
+ | |-package.json
+ | |-tsconfig.build.json
+ | |-tsconfig.json
+ | |-eslint.config.js
+ | |-src
+ | | |-pairing
+ | | | |-PairingSessionManager.ts
+ | | |-transport
+ | | | |-websocket.ts
+ | | |-config
+ | | | |-index.ts
+ | | |-protocol
+ | | | |-packets.ts
+ | | | |-pairingPackets.ts
+ | | | |-packetSerialization.ts
+ | | | |-packetSerialization.test.ts
+ | | | |-packetvalidation.ts
+ | | |-server.ts
+ | | |-logging
+ | | | |-index.ts
+ |-shared
+ |-docs
+ | |-07_PROTOCOL_SPECIFICATION.md
+ | |-10_TESTING_APECIFICATION.md
+ | |-00_PROJECT_OVERVIEW.md
+ | |-08_DEVELOPMENT_ROADMAP.md
+ | |-04_SECURITY_MODEL.md
+ | |-11_IMPLEMENTATION_PLAN.MD
+ | |-06_UI_GUIDELINES.md
+ | |-01_MASTER_CONTEXT.md
+ | |-02_PRODUCT_REQUIREMENTS.md
+ | |-09_ARCHITECTURE_DECISIONS.md
+ | |-05_EDGE_CASES.md
+ | |-03_SYSTEM_ARCHITECTURE.md
+ |-README.md
+ |-package-lock.json
+ |-CONTRIBUTING.md
+ |-android
+ | |-app
+ | | |-build.gradle.kts
+ | | |-build
+ | | |-src
+ | | | |-test
+ | | | | |-java
+ | | | | | |-com
+ | | | | | | |-macecho
+ | | | | | | | |-app
+ | | | | | | | | |-crypto
+ | | | | | | | | | |-CryptoManagerTest.kt
+ | | | | | | | | |-protocol
+ | | | | | | | | | |-PacketSerializationTest.kt
+ | | | | | | | | | |-ReplayGuardTest.kt
+ | | | | | | | | | |-SequenceTrackerTest.kt
+ | | | | | | | | |-storage
+ | | | | | | | | | |-StorageContractTest.kt
+ | | | |-main
+ | | | | |-res
+ | | | | | |-drawable
+ | | | | | | |-ic_status_dot.xml
+ | | | | | | |-ic_network.xml
+ | | | | | | |-ic_devices_illustration.xml
+ | | | | | | |-ic_enter_code.xml
+ | | | | | | |-qr_scan_frame.xml
+ | | | | | | |-ic_nav_home.xml
+ | | | | | | |-ic_camera_large.xml
+ | | | | | | |-ic_qr_code.xml
+ | | | | | | |-ic_nav_devices.xml
+ | | | | | | |-bg_icon_badge_blue.xml
+ | | | | | | |-ic_nav_settings.xml
+ | | | | | | |-ic_nav_back.xml
+ | | | | | |-layout
+ | | | | | | |-fragment_pair_device.xml
+ | | | | | | |-fragment_home.xml
+ | | | | | | |-fragment_pair_scanner.xml
+ | | | | | | |-fragment_settings.xml
+ | | | | | | |-fragment_trusted_devices.xml
+ | | | | | | |-activity_main.xml
+ | | | | | |-color
+ | | | | | | |-bottom_nav_item_color.xml
+ | | | | | |-values
+ | | | | | | |-colors.xml
+ | | | | | | |-themes.xml
+ | | | | | | |-styles.xml
+ | | | | | | |-strings.xml
+ | | | | | |-menu
+ | | | | | | |-bottom_nav_menu.xml
+ | | | | |-AndroidManifest.xml
+ | | | | |-java
+ | | | | | |-com
+ | | | | | | |-macecho
+ | | | | | | | |-app
+ | | | | | | | | |-ui
+ | | | | | | | | | |-settings
+ | | | | | | | | | | |-SettingsFragment.kt
+ | | | | | | | | | |-home
+ | | | | | | | | | | |-HomeFragment.kt
+ | | | | | | | | | |-devices
+ | | | | | | | | | | |-TrustedDevicesFragment.kt
+ | | | | | | | | | |-pair
+ | | | | | | | | | | |-PairDeviceFragment.kt
+ | | | | | | | | | | |-PairingScannerFragment.kt
+ | | | | | | | | |-pairing
+ | | | | | | | | | |-AndroidPairingState.kt
+ | | | | | | | | | |-CameraScanner.kt
+ | | | | | | | | | |-PairingSessionClient.kt
+ | | | | | | | | | |-PairingToken.kt
+ | | | | | | | | | |-CameraPermissionManager.kt
+ | | | | | | | | | |-QrValidator.kt
+ | | | | | | | | |-crypto
+ | | | | | | | | | |-CryptoManager.kt
+ | | | | | | | | |-MainActivity.kt
+ | | | | | | | | |-transport
+ | | | | | | | | | |-WebSocketClient.kt
+ | | | | | | | | |-navigation
+ | | | | | | | | | |-NavigationHost.kt
+ | | | | | | | | |-protocol
+ | | | | | | | | | |-ReplayGuard.kt
+ | | | | | | | | | |-Packets.kt
+ | | | | | | | | | |-PacketValidator.kt
+ | | | | | | | | | |-SequenceTracker.kt
+ | | | | | | | | | |-PacketSerialization.kt
+ | | | | | | | | |-MacEchoApplication.kt
+ | | | | | | | | |-storage
+ | | | | | | | | | |-TrustStore.kt
+ | | | | | | | | | |-KeystoreManager.kt
+ | |-local.properties
+ | |-gradle
+ | | |-wrapper
+ | | | |-gradle-wrapper.jar
+ | | | |-gradle-wrapper.properties
+ | |-gradlew
+ | |-build.gradle.kts
+ | |-settings.gradle.kts
+ | |-gradle.properties
+ | |-gradlew.bat
+ |-assets
+ |-tree.txt
