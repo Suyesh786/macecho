@@ -46,7 +46,11 @@ import java.util.concurrent.TimeUnit
  *
  * @param deviceId  Stable Android device UUID (used as senderId in messages).
  */
-class PairingSessionClient(private val deviceId: String) {
+class PairingSessionClient(
+    private val deviceId: String,
+    private val keystoreManager: com.macecho.app.storage.KeystoreManager,
+    private val trustStore: com.macecho.app.storage.TrustStore
+) {
 
     // -------------------------------------------------------------------------
     // State
@@ -83,10 +87,12 @@ class PairingSessionClient(private val deviceId: String) {
     // Track received public keys to detect duplicate / out-of-order messages
     private var macPublicKeyReceived = false
     private var androidKeyHasBeenSent = false
+    private var androidIdentityReceived = false
 
     // Fingerprint tracking
     private var ourFingerprint: String? = null
     private var macFingerprintReceived: String? = null
+    private var macIdentityReceived: JSONObject? = null
 
     // -------------------------------------------------------------------------
     // Public API
@@ -119,9 +125,20 @@ class PairingSessionClient(private val deviceId: String) {
         _state.value = AndroidPairingState.UNPAIRED
     }
 
-    /** Releases all resources. Call from Fragment.onDestroyView(). */
+    /**
+     * Releases all resources. Call from Fragment.onDestroyView().
+     *
+     * Connection-ownership fix: if pairing already succeeded, the socket has
+     * already been handed to [com.macecho.app.session.AppSessionManager] and
+     * [webSocket] is already null here — [cancel] becomes a harmless no-op
+     * on the (already-cleared) session, and does NOT flip state back to
+     * UNPAIRED, since a real, still-connected session exists and this
+     * fragment tearing down must not appear to unpair it.
+     */
     fun destroy() {
-        cancel("destroyed")
+        if (_state.value != AndroidPairingState.SECURE_CHANNEL_READY) {
+            cancel("destroyed")
+        }
         scope.cancel()
         okHttpClient.dispatcher.executorService.shutdown()
     }
@@ -184,14 +201,19 @@ class PairingSessionClient(private val deviceId: String) {
                 val macConnected = obj.optBoolean("macConnected", false)
                 if (macConnected) {
                     _state.value = AndroidPairingState.EXCHANGING_KEYS
-                    sendEphemeralPublicKey()
+                    sendIdentity()
                 }
             }
 
             "PAIRING_READY" -> {
                 // Theoretically Mac sends this, but Android relies on macConnected in JOIN_ACK
                 _state.value = AndroidPairingState.EXCHANGING_KEYS
-                sendEphemeralPublicKey()
+                sendIdentity()
+            }
+
+            "PAIRING_IDENTITY" -> {
+                println("PairingTrace: RECEIVE PAIRING_IDENTITY")
+                macIdentityReceived = obj
             }
 
             "PAIRING_PUBLIC_KEY" -> {
@@ -219,12 +241,44 @@ class PairingSessionClient(private val deviceId: String) {
             "PAIRING_TIMEOUT" -> {
                 setError("The pairing session expired. Please generate a new QR code.")
             }
+            
+            "TRUST_REVOKED" -> {
+                if (sid != null) {
+                    trustStore.remove(sid)
+                }
+                com.macecho.app.session.AppSessionManager.terminate(
+                    com.macecho.app.session.AppSessionManager.SessionTerminationReason.UNPAIRED
+                )
+                com.macecho.app.session.AppSessionManager.emitTrustRevokedEvent()
+            }
         }
     }
 
     // -------------------------------------------------------------------------
     // Key exchange
     // -------------------------------------------------------------------------
+
+    private fun sendIdentity() {
+        if (androidIdentityReceived) return
+        androidIdentityReceived = true
+        
+        val deviceName = android.os.Build.MODEL ?: "Android Device"
+        val identity = keystoreManager.generateIdentity(deviceName, "Android")
+
+        val ed25519B64 = android.util.Base64.encodeToString(identity.ed25519PublicKeyBytes, android.util.Base64.NO_WRAP)
+        val x25519B64 = android.util.Base64.encodeToString(identity.x25519PublicKeyBytes, android.util.Base64.NO_WRAP)
+        
+        println("PairingTrace: SEND PAIRING_IDENTITY")
+        sendPairingMessage(buildJson("PAIRING_IDENTITY") {
+            put("senderId", deviceId)
+            put("deviceName", identity.deviceName)
+            put("deviceType", identity.deviceType)
+            put("ed25519PublicKey", ed25519B64)
+            put("x25519PublicKey", x25519B64)
+        })
+        
+        sendEphemeralPublicKey()
+    }
 
     private fun sendEphemeralPublicKey() {
         if (androidKeyHasBeenSent) return
@@ -296,7 +350,62 @@ class PairingSessionClient(private val deviceId: String) {
 
         println("PairingTrace: VALIDATE FINGERPRINT (ours=$ours, theirs=$theirs)")
         if (ours == theirs) {
+            val identity = macIdentityReceived
+            if (identity != null) {
+                try {
+                    val senderId = identity.optString("senderId")
+                    val deviceName = identity.optString("deviceName", "Mac")
+                    val deviceType = identity.optString("deviceType", "Mac")
+                    val ed25519B64 = identity.optString("ed25519PublicKey")
+                    val x25519B64 = identity.optString("x25519PublicKey")
+                    
+                    if (ed25519B64.isNotEmpty() && x25519B64.isNotEmpty() && senderId.isNotEmpty()) {
+                        val ed25519Bytes = android.util.Base64.decode(ed25519B64, android.util.Base64.NO_WRAP)
+                        val x25519Bytes = android.util.Base64.decode(x25519B64, android.util.Base64.NO_WRAP)
+                        
+                        println("PairingTrace: FINGERPRINT_MATCH. Saving TrustEntry.")
+                        val entry = com.macecho.app.storage.TrustEntry(
+                            trustedDeviceId = senderId,
+                            trustedX25519PublicKeyBytes = x25519Bytes,
+                            trustedEd25519PublicKeyBytes = ed25519Bytes,
+                            pairingTimestampMs = System.currentTimeMillis(),
+                            trustStatus = com.macecho.app.storage.TrustStatus.TRUSTED,
+                            deviceName = deviceName,
+                            deviceType = deviceType
+                        )
+                        trustStore.addOrUpdate(entry)
+                        println("PairingTrace: TrustStore updated successfully.")
+                    } else {
+                        println("PairingTrace: FINGERPRINT_MATCH but Identity missing required fields.")
+                    }
+                } catch (e: Exception) {
+                    println("PairingTrace: Failed to save TrustEntry: ${e.message}")
+                }
+            } else {
+                println("PairingTrace: FINGERPRINT_MATCH but Identity missing.")
+            }
             println("PairingTrace: SECURE_CHANNEL_READY")
+
+            // Connection-ownership fix: hand the already-open WebSocket to
+            // AppSessionManager BEFORE marking success, so it becomes the
+            // long-lived owner instead of this client (whose cleanup would
+            // otherwise close it once the fragment is destroyed). This does
+            // not open a second connection or repeat any handshake step —
+            // it is the same `webSocket` instance used throughout.
+            val socket = webSocket
+            if (socket != null) {
+                com.macecho.app.session.AppSessionManager.adopt(
+                    webSocket = socket,
+                    pairedDeviceId = identity?.optString("senderId") ?: "",
+                    pairedDeviceName = identity?.optString("deviceName") ?: "Mac",
+                    pairedDeviceType = identity?.optString("deviceType") ?: "MACOS",
+                )
+                // Prevent cleanupSession() (called by destroy()/cancel() on
+                // later teardown) from closing a socket AppSessionManager
+                // now owns.
+                webSocket = null
+            }
+
             _state.value = AndroidPairingState.SECURE_CHANNEL_READY
         } else {
             println("PairingTrace: FINGERPRINT_MISMATCH")

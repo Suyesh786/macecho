@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		74A87B6A04193DC28113F357 /* PairingMessageSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798058BAD9BB6707D3B343E3 /* PairingMessageSerialization.swift */; };
 		909D8CF20F5E59E10D83DD0E /* PairingHandshakeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D478C0EC28FD2F3037F8C9D0 /* PairingHandshakeController.swift */; };
+		9EC7548682DF9F8870B0C610 /* AppSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4398810F003AC7F1B3D3FCF /* AppSessionManager.swift */; };
 		A10000000000000000000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* AppDelegate.swift */; };
 		A10000000000000000000002 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* main.swift */; };
 		A10000000000000000000003 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* StatusItemController.swift */; };
@@ -58,6 +59,7 @@
 		B2000000000000000000000A /* QRCodeGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeGenerator.swift; sourceTree = "<group>"; };
 		BCE6E81DC41B8055A5713680 /* MacPairingState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MacPairingState.swift; sourceTree = "<group>"; };
 		D478C0EC28FD2F3037F8C9D0 /* PairingHandshakeController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PairingHandshakeController.swift; sourceTree = "<group>"; };
+		F4398810F003AC7F1B3D3FCF /* AppSessionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppSessionManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +95,7 @@
 				B30000000000000000000001 /* UI */,
 				B30000000000000000000002 /* Pairing */,
 				A10000000000000000000013 /* Info.plist */,
+				FE6E59338ED29A0235467F6A /* Session */,
 			);
 			path = MacEcho;
 			sourceTree = "<group>";
@@ -165,6 +168,15 @@
 				798058BAD9BB6707D3B343E3 /* PairingMessageSerialization.swift */,
 			);
 			path = Pairing;
+			sourceTree = "<group>";
+		};
+		FE6E59338ED29A0235467F6A /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				F4398810F003AC7F1B3D3FCF /* AppSessionManager.swift */,
+			);
+			name = Session;
+			path = Session;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -255,6 +267,7 @@
 				F01E9AB1E43C8A35092D1018 /* MacPairingState.swift in Sources */,
 				909D8CF20F5E59E10D83DD0E /* PairingHandshakeController.swift in Sources */,
 				74A87B6A04193DC28113F357 /* PairingMessageSerialization.swift in Sources */,
+				9EC7548682DF9F8870B0C610 /* AppSessionManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

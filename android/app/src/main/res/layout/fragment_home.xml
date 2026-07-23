@@ -184,7 +184,7 @@
                 <!-- Status row -->
                 <LinearLayout style="@style/RowStyle">
                     <TextView style="@style/RowLabelStyle" android:text="@string/home_row_status"/>
-                    <TextView style="@style/RowValueStyle" android:text="@string/home_row_status_value"/>
+                    <TextView android:id="@+id/tv_status_value" style="@style/RowValueStyle" android:text="@string/home_row_status_value"/>
                 </LinearLayout>
 
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorOutlineVariant"/>
@@ -192,7 +192,7 @@
                 <!-- Trusted Macs row -->
                 <LinearLayout style="@style/RowStyle">
                     <TextView style="@style/RowLabelStyle" android:text="@string/home_row_trusted_macs"/>
-                    <TextView style="@style/RowValueStyle" android:text="@string/home_row_trusted_macs_value"/>
+                    <TextView android:id="@+id/tv_trusted_macs_value" style="@style/RowValueStyle" android:text="@string/home_row_trusted_macs_value"/>
                 </LinearLayout>
 
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorOutlineVariant"/>

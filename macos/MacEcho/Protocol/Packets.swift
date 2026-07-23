@@ -121,6 +121,8 @@ enum PacketType {
     // -- Synchronization Commands --
     case syncInitial
     case syncRefresh
+    // -- Trust Management --
+    case trustRevoked
     // -- Acknowledgement --
     case ack
     case nack

@@ -38,6 +38,7 @@ export type PairingMessageType =
   | "PAIRING_JOIN"          // Android → Backend: join an existing Mac session
   | "PAIRING_JOIN_ACK"      // Backend → Android: join acknowledged
   | "PAIRING_READY"         // Backend → Mac: Android has joined
+  | "PAIRING_IDENTITY"      // Mac ↔ Android (relay): identity information (name, type, Ed25519 key)
   | "PAIRING_PUBLIC_KEY"    // Mac ↔ Android (relay): ephemeral X25519 public key
   | "PAIRING_FINGERPRINT"   // Mac ↔ Android (relay): SHA-256 verification fingerprint
   | "PAIRING_CANCELLED"     // Either → Backend: cancel session
@@ -48,6 +49,7 @@ const PAIRING_TYPES = new Set<string>([
   "PAIRING_JOIN",
   "PAIRING_JOIN_ACK",
   "PAIRING_READY",
+  "PAIRING_IDENTITY",
   "PAIRING_PUBLIC_KEY",
   "PAIRING_FINGERPRINT",
   "PAIRING_CANCELLED",
@@ -92,6 +94,18 @@ export interface PairingReady extends PairingMessageBase {
   readonly type: "PAIRING_READY";
 }
 
+/** Mac ↔ Android (relayed through backend): identity information. */
+export interface PairingIdentity extends PairingMessageBase {
+  readonly type: "PAIRING_IDENTITY";
+  readonly senderId: string;
+  readonly deviceName: string;
+  readonly deviceType: string;
+  /** Base64-encoded X.509 SubjectPublicKeyInfo bytes of the long-term Ed25519 identity key. */
+  readonly ed25519PublicKey: string;
+  /** Base64-encoded X.509 SubjectPublicKeyInfo bytes of the long-term X25519 identity key. */
+  readonly x25519PublicKey: string;
+}
+
 /** Mac ↔ Android (relayed through backend): ephemeral X25519 public key, base64-encoded. */
 export interface PairingPublicKey extends PairingMessageBase {
   readonly type: "PAIRING_PUBLIC_KEY";
@@ -128,6 +142,7 @@ export type PairingMessage =
   | PairingMacJoin
   | PairingJoinAck
   | PairingReady
+  | PairingIdentity
   | PairingPublicKey
   | PairingFingerprint
   | PairingCancelled

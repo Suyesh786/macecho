@@ -25,6 +25,20 @@ actor PairingHandshakeController {
     private let deviceId: String
     private let client: WebSocketClient
 
+    /// Exposes the underlying transport so the caller (PairDeviceViewController)
+    /// can hand ownership to AppSessionManager once `.secureChannelReady` is
+    /// reported. This does not open a second connection — it is the same
+    /// `WebSocketClient` this controller has been using throughout the
+    /// handshake. Added for the connection-ownership fix; the handshake
+    /// logic below is otherwise unchanged.
+    nonisolated var transportClient: WebSocketClient { client }
+
+    /// Exposes the paired device's identity once received, so the caller can
+    /// hand it to AppSessionManager alongside the transport on success.
+    /// Read-only outside the actor; populated during the existing handshake
+    /// flow (unchanged) via `handlePairingMessage`.
+    var pairedIdentity: PairingIdentity? { androidIdentityReceived }
+
     private var ephemeralPrivateKey: Curve25519.KeyAgreement.PrivateKey?
     private var derivedKey: SymmetricKey?
     
@@ -33,6 +47,7 @@ actor PairingHandshakeController {
     
     private var ourFingerprint: String?
     private var androidFingerprintReceived: String?
+    private var androidIdentityReceived: PairingIdentity?
 
     // Event stream for state updates
     nonisolated let stateStream: AsyncStream<MacPairingState>
@@ -90,11 +105,15 @@ actor PairingHandshakeController {
     private func cleanup(newState: MacPairingState) {
         state = newState
         
-        // Do not disconnect if pairing succeeded — Phase 13 needs the socket
+        // Do not disconnect if pairing succeeded — the socket is handed to
+        // AppSessionManager by the caller (PairDeviceViewController) via
+        // `transportClient`, which becomes its long-lived owner. This
+        // controller must not close a connection it no longer owns.
         if newState != .secureChannelReady {
-            transportTask?.cancel()
             Task { await client.disconnect() }
         }
+        
+        transportTask?.cancel()
         
         // CryptoKit manages PrivateKey/SymmetricKey memory securely and zeroes them on deallocation.
         ephemeralPrivateKey = nil
@@ -147,7 +166,12 @@ actor PairingHandshakeController {
         case .ready(let m):
             guard m.sessionId == token.sessionId else { return }
             state = .androidConnected
-            Task { await sendEphemeralPublicKey() }
+            Task { await sendIdentity() }
+
+        case .identity(let m):
+            print("PairingTrace: RECEIVE PAIRING_IDENTITY")
+            guard m.sessionId == token.sessionId else { return }
+            androidIdentityReceived = m
 
         case .publicKey(let m):
             print("PairingTrace: RECEIVE PAIRING_PUBLIC_KEY")
@@ -170,6 +194,32 @@ actor PairingHandshakeController {
             guard m.sessionId == token.sessionId else { return }
             cleanup(newState: .failed(.sessionExpired))
         }
+    }
+
+    private func sendIdentity() async {
+        // Read or generate our long-term identity keys
+        let deviceName = Host.current().localizedName ?? "Mac"
+        guard let identity = try? KeychainManager().generateIdentity(deviceName: deviceName, deviceType: "Mac") else {
+            cleanup(newState: .failed(.keyExchangeFailed))
+            return
+        }
+        let ed25519PubB64 = identity.ed25519PublicKey.rawRepresentation.base64EncodedString()
+        let x25519PubB64 = identity.x25519PublicKey.rawRepresentation.base64EncodedString()
+        
+        if let data = PairingMessageSerializer.encodeIdentity(
+            sessionId: token.sessionId,
+            senderId: deviceId,
+            deviceName: identity.deviceName,
+            deviceType: identity.deviceType,
+            ed25519PublicKey: ed25519PubB64,
+            x25519PublicKey: x25519PubB64
+        ), let text = String(data: data, encoding: .utf8) {
+            print("PairingTrace: SEND PAIRING_IDENTITY")
+            await client.sendText(text)
+        }
+        
+        // Immediately follow up with the ephemeral public key per the protocol sequence
+        await sendEphemeralPublicKey()
     }
 
     private func sendEphemeralPublicKey() async {
@@ -261,6 +311,28 @@ actor PairingHandshakeController {
         
         print("PairingTrace: VALIDATE FINGERPRINT (ours=\(ours), theirs=\(theirs))")
         if ours == theirs {
+            if let identity = androidIdentityReceived,
+               let ed25519PubKeyData = Data(base64Encoded: identity.ed25519PublicKey),
+               let x25519PubKeyData = Data(base64Encoded: identity.x25519PublicKey) {
+                print("PairingTrace: FINGERPRINT_MATCH. Saving TrustEntry.")
+                let entry = TrustEntry(
+                    trustedDeviceId: identity.senderId,
+                    trustedX25519PublicKeyData: x25519PubKeyData,
+                    trustedEd25519PublicKeyData: ed25519PubKeyData,
+                    pairingTimestampMs: Int64(Date().timeIntervalSince1970 * 1000),
+                    trustStatus: .trusted,
+                    deviceName: identity.deviceName,
+                    deviceType: identity.deviceType
+                )
+                do {
+                    try TrustStore().addOrUpdate(entry)
+                    print("PairingTrace: TrustStore updated successfully.")
+                } catch {
+                    print("PairingTrace: Failed to save TrustEntry: \(error)")
+                }
+            } else {
+                print("PairingTrace: FINGERPRINT_MATCH but Identity missing or invalid.")
+            }
             print("PairingTrace: SECURE_CHANNEL_READY")
             cleanup(newState: .secureChannelReady)
         } else {

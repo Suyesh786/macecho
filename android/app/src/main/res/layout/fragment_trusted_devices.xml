@@ -46,6 +46,7 @@
 
     <!-- Empty state — vertically centered in remaining space -->
     <LinearLayout
+        android:id="@+id/ll_empty_state"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -94,4 +95,67 @@
             style="@style/Widget.Material3.Button"/>
 
     </LinearLayout>
+
+    <!-- Populated state -->
+    <LinearLayout
+        android:id="@+id/ll_populated_state"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="24dp">
+        
+        <TextView
+            android:id="@+id/tv_device_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:fontFamily="sans-serif-medium"/>
+            
+        <TextView
+            android:id="@+id/tv_device_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="14sp"/>
+            
+        <TextView
+            android:id="@+id/tv_device_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"/>
+            
+        <TextView
+            android:id="@+id/tv_last_connected"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"/>
+            
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_unpair_device"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="32dp"
+            android:text="Unpair Device"
+            android:textColor="@color/design_default_color_error"
+            app:strokeColor="@color/design_default_color_error"
+            app:strokeWidth="1dp"
+            android:textSize="15sp"
+            app:cornerRadius="28dp"
+            style="@style/Widget.Material3.Button.OutlinedButton"/>
+    </LinearLayout>
+
 </LinearLayout>

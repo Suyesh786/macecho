@@ -263,15 +263,32 @@ struct TrustStore {
     /// This key is separate from the identity private keys in KeychainManager.
     /// Per Architecture Decision 18: "Trust metadata does not require hardware-backed
     /// key storage and benefits from simpler access patterns."
+    nonisolated(unsafe) private static var cachedTrustKey: SymmetricKey?
+
+    /// Clears the in-memory key cache. Call this after unpairing so the next
+    /// pairing generates and stores a fresh encryption key rather than reusing
+    /// a stale cached key that may no longer match the Keychain state.
+    static func invalidateKeyCache() {
+        cachedTrustKey = nil
+    }
+
     private func getOrCreateTrustKey() throws -> SymmetricKey {
+        if let cached = TrustStore.cachedTrustKey {
+            return cached
+        }
+        
         // Try reading existing key
         if let keyData = keychainReadKey() {
-            return SymmetricKey(data: keyData)
+            let key = SymmetricKey(data: keyData)
+            TrustStore.cachedTrustKey = key
+            return key
         }
+        
         // Generate a new 256-bit key using CryptoKit (system CSPRNG)
         let newKey = SymmetricKey(size: .bits256)
         let keyData = newKey.withUnsafeBytes { Data($0) }
         try keychainStoreKey(keyData)
+        TrustStore.cachedTrustKey = newKey
         return newKey
     }
 

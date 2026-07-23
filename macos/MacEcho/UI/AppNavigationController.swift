@@ -17,6 +17,7 @@
 //   - Business logic of any kind
 
 import AppKit
+import Foundation
 
 // MARK: - Navigable
 
@@ -84,6 +85,43 @@ final class AppNavigationController: NSViewController {
         let home = HomeViewController()
         home.navigationController = self
         installRoot(home)
+        
+        // Single, centralized observer for remote trust revocation.
+        // AppNavigationController is always alive for the lifetime of the popover,
+        // so this fires exactly once per TRUST_REVOKED event — no duplicate alerts.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(showTrustRevokedAlert),
+            name: AppSessionManager.trustRevokedNotification,
+            object: nil
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // Trust Revoked Alert (called by centralized notification observer)
+    // -------------------------------------------------------------------------
+
+    @objc private func showTrustRevokedAlert() {
+        // Pop back to Home first so the user sees the correct (unpaired) state.
+        while stack.count > 1 { pop() }
+        
+        // Small delay so the pop animation finishes before the alert appears.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let window = self?.view.window else {
+                // Popover not visible — show as a standalone panel.
+                let alert = NSAlert()
+                alert.messageText = "Device Unpaired"
+                alert.informativeText = "The paired Android device has removed the trust relationship.\n\nPair a new device to continue using MacEcho."
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+                return
+            }
+            let alert = NSAlert()
+            alert.messageText = "Device Unpaired"
+            alert.informativeText = "The paired Android device has removed the trust relationship.\n\nPair a new device to continue using MacEcho."
+            alert.addButton(withTitle: "OK")
+            alert.beginSheetModal(for: window)
+        }
     }
 
     // -------------------------------------------------------------------------

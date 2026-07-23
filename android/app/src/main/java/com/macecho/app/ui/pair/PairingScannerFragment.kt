@@ -64,11 +64,27 @@ class PairingScannerFragment : Fragment() {
         UUID.randomUUID().toString()
     }
 
-    private val pairingClient by lazy { PairingSessionClient(deviceId) }
+    private val pairingClient by lazy { 
+        PairingSessionClient(
+            deviceId = deviceId,
+            keystoreManager = com.macecho.app.storage.KeystoreManager(requireContext()),
+            trustStore = com.macecho.app.storage.TrustStore(requireContext())
+        )
+    }
     private val cameraScanner = CameraScanner()
 
     /** Registered in onCreate() per ActivityResult API contract. */
     private lateinit var permissionManager: CameraPermissionManager
+
+    /**
+     * Handler used to auto-navigate back ~1 second after
+     * SECURE_CHANNEL_READY, per requirement: "Wait approximately one
+     * second. Automatically navigate back. Do NOT require the user to
+     * press Back." Cancelled in onDestroyView so it never fires against a
+     * torn-down fragment.
+     */
+    private val autoDismissHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var autoDismissRunnable: Runnable? = null
 
     // -------------------------------------------------------------------------
     // Lifecycle
@@ -103,9 +119,35 @@ class PairingScannerFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        autoDismissRunnable?.let { autoDismissHandler.removeCallbacks(it) }
+        autoDismissRunnable = null
         cameraScanner.stop()
+        // Connection-ownership fix: destroy() no longer disconnects a
+        // successfully-paired session — see PairingSessionClient.destroy().
+        // The already-adopted socket in AppSessionManager is unaffected.
         pairingClient.destroy()
         _binding = null
+    }
+
+    /**
+     * Per requirement: "Wait approximately one second. Automatically
+     * navigate back. Do NOT require the user to press Back." Navigating
+     * back here does not disconnect anything — the connection was already
+     * handed to AppSessionManager by PairingSessionClient before this state
+     * was emitted.
+     *
+     * Task 4 update: uses navigateToRoot() instead of navigateBack() so the
+     * user returns directly to Home in one step, without stopping on
+     * PairDeviceFragment (which would otherwise remain on the back stack
+     * and require a second back animation).
+     */
+    private fun scheduleAutoDismiss() {
+        autoDismissRunnable?.let { autoDismissHandler.removeCallbacks(it) }
+        val runnable = Runnable {
+            (activity as? NavigationHost)?.navigateToRoot()
+        }
+        autoDismissRunnable = runnable
+        autoDismissHandler.postDelayed(runnable, 1000L)
     }
 
     // -------------------------------------------------------------------------
@@ -178,7 +220,7 @@ class PairingScannerFragment : Fragment() {
                 b.labelStatus.text = getString(com.macecho.app.R.string.pair_status_ready)
                 b.labelSubStatus.isVisible = false
                 b.btnTryAgain.isVisible = false
-                // Phase 12.3 will navigate to trust-establishment screen here
+                scheduleAutoDismiss()
             }
 
             AndroidPairingState.ERROR -> Unit // handled by errorMessage observer
@@ -216,7 +258,11 @@ class PairingScannerFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            pairingClient.cancel("user_cancelled")
+            // Connection-ownership fix: don't cancel a session that has
+            // already succeeded and been handed to AppSessionManager.
+            if (pairingClient.state.value != AndroidPairingState.SECURE_CHANNEL_READY) {
+                pairingClient.cancel("user_cancelled")
+            }
             (requireActivity() as? NavigationHost)?.navigateBack()
         }
         binding.btnTryAgain.setOnClickListener {

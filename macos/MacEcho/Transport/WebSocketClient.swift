@@ -67,7 +67,7 @@ enum TransportState {
 // ---------------------------------------------------------------------------
 
 /// Events emitted by the transport to its caller.
-enum TransportEvent {
+enum TransportEvent: Sendable {
     /// WebSocket connection established and ready.
     case connected
     /// Connection was closed (cleanly or unexpectedly).
@@ -109,6 +109,8 @@ actor WebSocketClient {
     /// Consume in a Task: `for await event in client.events { ... }`
     nonisolated let events: AsyncStream<TransportEvent>
     private nonisolated let eventContinuation: AsyncStream<TransportEvent>.Continuation
+
+    private var eventHandler: (@Sendable (TransportEvent) -> Void)?
 
     // MARK: - Dependencies
 
@@ -164,6 +166,11 @@ actor WebSocketClient {
         openSocket(url: url)
     }
 
+    /// Sets an event handler for continuous observation without consuming the AsyncStream.
+    func setEventHandler(_ handler: @escaping @Sendable (TransportEvent) -> Void) {
+        self.eventHandler = handler
+    }
+
     /// Closes the connection and cancels all background tasks.
     ///
     /// Cleanup guaranteed:
@@ -182,6 +189,7 @@ actor WebSocketClient {
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         webSocketTask = nil
         eventContinuation.yield(.disconnected)
+        eventHandler?(.disconnected)
         eventContinuation.finish()
     }
 
@@ -227,6 +235,7 @@ actor WebSocketClient {
         state = .connected
         currentReconnectDelay = reconnectInitialDelay
         eventContinuation.yield(.connected)
+        eventHandler?(.connected)
         
         startReceiveLoop()
         startHeartbeat()
@@ -254,9 +263,11 @@ actor WebSocketClient {
             case .data(let data):
                 // Opaque bytes — no parsing at the transport layer
                 eventContinuation.yield(.packetReceived([UInt8](data)))
+                eventHandler?(.packetReceived([UInt8](data)))
             case .string(let text):
                 // Text — Phase 12.2 pairing messages
                 eventContinuation.yield(.textReceived(text))
+                eventHandler?(.textReceived(text))
             @unknown default:
                 break
             }
@@ -265,6 +276,7 @@ actor WebSocketClient {
         case .failure(let error):
             guard !isShutdown else { return }
             eventContinuation.yield(.error(error))
+            eventHandler?(.error(error))
             scheduleReconnect()
         }
     }
@@ -307,6 +319,7 @@ actor WebSocketClient {
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         eventContinuation.yield(.error(TransportTimeoutError()))
+        eventHandler?(.error(TransportTimeoutError()))
         scheduleReconnect()
     }
 

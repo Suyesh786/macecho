@@ -178,6 +178,10 @@ export async function registerTransport(
           }
           break;
         }
+        case "PAIRING_IDENTITY": {
+          cfg.pairingManager.relay(msg.sessionId, socket, raw);
+          break;
+        }
 
         case "PAIRING_PUBLIC_KEY": {
           cfg.pairingManager.relay(msg.sessionId, socket, raw);

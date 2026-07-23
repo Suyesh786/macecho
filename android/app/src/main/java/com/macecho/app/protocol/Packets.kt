@@ -131,6 +131,8 @@ enum class PacketType {
     // -- Synchronization Commands --
     SYNC_INITIAL,
     SYNC_REFRESH,
+    // -- Trust Management --
+    TRUST_REVOKED,
     // -- Acknowledgement --
     ACK,
     NACK,

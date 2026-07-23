@@ -323,9 +323,9 @@ class TrustStore(private val context: Context) {
 
     // Encrypted envelope format: [12-byte nonce][4-byte ciphertext length][ciphertext]
     private fun encryptEnvelope(plaintext: ByteArray, key: SecretKey): ByteArray {
-        val nonce = ByteArray(GCM_NONCE_BYTES).also { secureRandom.nextBytes(it) }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BITS, nonce))
+        cipher.init(Cipher.ENCRYPT_MODE, key)
+        val nonce = cipher.iv
         val ciphertext = cipher.doFinal(plaintext)
         val baos = ByteArrayOutputStream()
         DataOutputStream(baos).use { dos ->

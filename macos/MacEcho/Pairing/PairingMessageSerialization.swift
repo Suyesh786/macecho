@@ -25,6 +25,7 @@ enum PairingMessageType: String, Codable, Sendable {
     case pairingMacJoin         = "PAIRING_MAC_JOIN"
     case pairingJoinAck         = "PAIRING_JOIN_ACK"
     case pairingReady           = "PAIRING_READY"
+    case pairingIdentity        = "PAIRING_IDENTITY"
     case pairingPublicKey       = "PAIRING_PUBLIC_KEY"
     case pairingFingerprint     = "PAIRING_FINGERPRINT"
     case pairingCancelled       = "PAIRING_CANCELLED"
@@ -58,6 +59,18 @@ struct PairingReady: Codable, Sendable {
     let type: PairingMessageType
     let sessionId: String
     let timestamp: Int64
+}
+
+/// Mac ↔ Android (relay): identity information.
+struct PairingIdentity: Codable, Sendable {
+    let type: PairingMessageType
+    let sessionId: String
+    let timestamp: Int64
+    let senderId: String
+    let deviceName: String
+    let deviceType: String
+    let ed25519PublicKey: String
+    let x25519PublicKey: String
 }
 
 /// Mac → Backend (relay to Android): ephemeral X25519 public key.
@@ -104,6 +117,7 @@ struct PairingTimeout: Codable, Sendable {
 /// All message shapes the Mac side may receive from the backend.
 enum InboundPairingMessage: Sendable {
     case ready(PairingReady)
+    case identity(PairingIdentity)
     case publicKey(PairingPublicKey)
     case fingerprint(PairingFingerprint)
     case cancelled(PairingCancelled)
@@ -131,6 +145,20 @@ enum PairingMessageSerializer {
             sessionId: sessionId,
             timestamp: Int64(Date().timeIntervalSince1970 * 1_000),
             senderId: senderId
+        )
+        return try? encoder.encode(msg)
+    }
+
+    static func encodeIdentity(sessionId: String, senderId: String, deviceName: String, deviceType: String, ed25519PublicKey: String, x25519PublicKey: String) -> Data? {
+        let msg = PairingIdentity(
+            type: .pairingIdentity,
+            sessionId: sessionId,
+            timestamp: Int64(Date().timeIntervalSince1970 * 1_000),
+            senderId: senderId,
+            deviceName: deviceName,
+            deviceType: deviceType,
+            ed25519PublicKey: ed25519PublicKey,
+            x25519PublicKey: x25519PublicKey
         )
         return try? encoder.encode(msg)
     }
@@ -181,6 +209,9 @@ enum PairingMessageSerializer {
         case .pairingReady:
             guard let m = try? decoder.decode(PairingReady.self, from: data) else { return nil }
             return .ready(m)
+        case .pairingIdentity:
+            guard let m = try? decoder.decode(PairingIdentity.self, from: data) else { return nil }
+            return .identity(m)
         case .pairingPublicKey:
             guard let m = try? decoder.decode(PairingPublicKey.self, from: data) else { return nil }
             return .publicKey(m)

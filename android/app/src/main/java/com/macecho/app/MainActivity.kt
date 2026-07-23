@@ -104,6 +104,21 @@ class MainActivity : AppCompatActivity(), NavigationHost {
         }
     }
 
+    override fun navigateToRoot() {
+        // Pops every entry in one step (rather than looping navigateBack()),
+        // so exactly one animation plays and the user never sees an
+        // intermediate screen — per Task 4: "Do not show two separate back
+        // animations." POP_BACK_STACK_INCLUSIVE with a null name pops back
+        // to the bottom of the stack, i.e. the current tab fragment
+        // installed by showTab(), which was never added to the back stack.
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack(
+                null,
+                androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
+            )
+        }
+    }
+
     @Suppress("MissingSuperCall")
     @Deprecated("Use OnBackPressedDispatcher instead for new code")
     override fun onBackPressed() {

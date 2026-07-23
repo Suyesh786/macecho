@@ -160,6 +160,7 @@ extension PacketType: Codable, CaseIterable {
         case nack = "NACK"
         case heartbeat = "HEARTBEAT"
         case error = "ERROR"
+        case trustRevoked = "TRUST_REVOKED"
     }
 
     private static let toWire: [PacketType: Wire] = [
@@ -178,6 +179,7 @@ extension PacketType: Codable, CaseIterable {
         .callDeclined: .callDeclined, .ringPhone: .ringPhone,
         .syncInitial: .syncInitial, .syncRefresh: .syncRefresh,
         .ack: .ack, .nack: .nack, .heartbeat: .heartbeat, .error: .error,
+        .trustRevoked: .trustRevoked,
     ]
     private static let fromWire: [Wire: PacketType] = Dictionary(
         uniqueKeysWithValues: toWire.map { ($1, $0) }

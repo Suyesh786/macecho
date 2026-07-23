@@ -347,9 +347,9 @@ class KeystoreManager(private val context: Context) {
     private data class EncryptedBlob(val nonce: ByteArray, val ciphertext: ByteArray)
 
     private fun encryptBlob(plaintext: ByteArray, key: SecretKey): EncryptedBlob {
-        val nonce = ByteArray(GCM_NONCE_BYTES).also { secureRandom.nextBytes(it) }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BITS, nonce))
+        cipher.init(Cipher.ENCRYPT_MODE, key)
+        val nonce = cipher.iv
         return EncryptedBlob(nonce = nonce, ciphertext = cipher.doFinal(plaintext))
     }
 

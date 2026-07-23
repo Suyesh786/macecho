@@ -33,4 +33,19 @@ interface NavigationHost {
      * Does nothing if the back stack is already empty.
      */
     fun navigateBack()
+
+    /**
+     * Clears the entire detail-screen back stack in one step, returning
+     * directly to the current bottom-nav tab (e.g. Home) without an
+     * intermediate stop on any screen pushed via [navigateTo].
+     *
+     * Added for Task 4 ("Successful Navigation"): after Camera → Successful
+     * Pairing, the user must land directly on Home, not on the Pair Device
+     * screen with a second back animation required. This is a minimal
+     * addition to the existing [NavigationHost] contract — no new
+     * navigation architecture is introduced; it uses the same
+     * [androidx.fragment.app.FragmentManager] back stack [navigateTo] and
+     * [navigateBack] already operate on.
+     */
+    fun navigateToRoot()
 }

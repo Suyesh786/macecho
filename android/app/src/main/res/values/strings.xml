@@ -11,6 +11,8 @@
     <string name="home_greeting_morning">Good Morning</string>
     <string name="home_greeting_evening">Good Evening</string>
     <string name="home_status_ready">Ready to Pair</string>
+    <string name="home_status_paired">Paired</string>
+    <string name="home_status_unpaired">Unpaired</string>
     <string name="home_pair_card_title">Pair New Device</string>
     <string name="home_pair_card_subtitle">Scan a QR Code</string>
     <string name="home_connection_overview_title">Connection Overview</string>

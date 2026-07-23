@@ -42,6 +42,16 @@ final class PairDeviceViewController: NSViewController, Navigable {
     private var pairingController: PairingHandshakeController?
     private var stateObservationTask: Task<Void, Never>?
 
+    /// `true` once `.secureChannelReady` has been handed off to
+    /// AppSessionManager. Connection-ownership fix: while `true`,
+    /// `viewWillDisappear` must NOT cancel the pairing controller — the
+    /// connection is no longer this screen's to own.
+    private var didHandOffSession = false
+
+    /// Scheduled after success to auto-dismiss back to Home. Invalidated on
+    /// teardown so it never fires against a deallocated controller.
+    private var autoDismissTimer: Timer?
+
     // Subview references
     private weak var qrImageView: NSImageView?
     private weak var countdownLabel: NSTextField?
@@ -63,13 +73,47 @@ final class PairDeviceViewController: NSViewController, Navigable {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+
+        // Per requirement: "The Generate QR action must become unavailable
+        // while paired." AppSessionManager is the sole source of truth for
+        // pairing state — this view no longer starts a new handshake if a
+        // session is already active. Note: HomeViewController's card action
+        // is expected to route here only when unpaired; this guard also
+        // protects direct navigation and re-appearance.
+        guard !AppSessionManager.shared.isPaired else {
+            showAlreadyPairedNotice()
+            return
+        }
         startNewPairingSession()
+    }
+
+    /// Per requirement: clicking "Generate QR" while already paired shows a
+    /// temporary popup/inline notice instead of generating a QR code, then
+    /// returns to Home without starting any pairing session.
+    private func showAlreadyPairedNotice() {
+        let alert = NSAlert()
+        alert.messageText = "This Mac is already paired with another device."
+        alert.informativeText = "Unpair the current device before creating a new pairing."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.beginSheetModal(for: view.window ?? NSWindow()) { [weak self] _ in
+            self?.navigationController?.pop()
+        }
     }
 
     override func viewWillDisappear() {
         super.viewWillDisappear()
         stopTimer()
+        autoDismissTimer?.invalidate()
+        autoDismissTimer = nil
         stateObservationTask?.cancel()
+
+        // Connection-ownership fix: only cancel the in-flight handshake if
+        // pairing never succeeded. Once `.secureChannelReady` has been
+        // handed off to AppSessionManager (didHandOffSession == true), this
+        // screen no longer owns the connection and must not disconnect it
+        // just because it is closing.
+        guard !didHandOffSession else { return }
         Task { await pairingController?.cancel(reason: "user_cancelled") }
     }
 
@@ -285,7 +329,7 @@ final class PairDeviceViewController: NSViewController, Navigable {
             spinner?.stopAnimation(nil)
             spinner?.isHidden = true
             statusLabel?.textColor = NSColor.systemGreen
-            // Phase 12.3: Transition to trust establishment
+            handOffSessionAndScheduleDismiss()
         case .failed:
             spinner?.stopAnimation(nil)
             spinner?.isHidden = true
@@ -294,6 +338,44 @@ final class PairDeviceViewController: NSViewController, Navigable {
             spinner?.isHidden = false
             spinner?.startAnimation(nil)
             statusLabel?.textColor = .secondaryLabelColor
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Connection ownership handoff (success path only)
+    // -------------------------------------------------------------------------
+
+    /// Per project requirement: "Display the success state. Wait
+    /// approximately 1–2 seconds. Automatically dismiss the pairing screen.
+    /// Return to Home. The connection must remain alive."
+    ///
+    /// Hands the already-open transport to AppSessionManager exactly once,
+    /// then schedules an automatic pop back to Home. Guards against being
+    /// called twice (state stream could in principle re-yield the same
+    /// terminal state).
+    private func handOffSessionAndScheduleDismiss() {
+        guard !didHandOffSession, let controller = pairingController else { return }
+        didHandOffSession = true
+
+        Task { [weak self] in
+            guard let self else { return }
+            let client = await controller.transportClient
+            let identity = await controller.pairedIdentity
+            await MainActor.run {
+                AppSessionManager.shared.adopt(
+                    client: client,
+                    pairedDeviceId: identity?.senderId ?? "",
+                    pairedDeviceName: identity?.deviceName ?? "Android Device",
+                    pairedDeviceType: identity?.deviceType ?? "ANDROID"
+                )
+            }
+        }
+
+        autoDismissTimer?.invalidate()
+        autoDismissTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.navigationController?.pop()
+            }
         }
     }
 
@@ -307,7 +389,9 @@ final class PairDeviceViewController: NSViewController, Navigable {
 
     @objc private func goBack() {
         stateObservationTask?.cancel()
-        Task { await pairingController?.cancel(reason: "user_cancelled") }
+        if !didHandOffSession {
+            Task { await pairingController?.cancel(reason: "user_cancelled") }
+        }
         navigationController?.pop()
     }
 
